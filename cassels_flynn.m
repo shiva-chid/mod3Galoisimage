@@ -10,9 +10,9 @@ function standardgenus2curve(defpols);
     return Li;
 end function;
 
-function eqns_2PequalsnegativeP(defpols);
+function eqns_2PequalsnegativeP(F,defpols);
 
-    A<k1,k2,k3,k4,f0,f1,f2,f3,f4,f5,f6,alpha,l1,l2,l3,l4> := PolynomialRing(RationalField(),16);
+    A<k1,k2,k3,k4,f0,f1,f2,f3,f4,f5,f6,alpha,l1,l2,l3,l4> := PolynomialRing(F,16);
 
     Coefficients := standardgenus2curve(defpols);
 
@@ -275,7 +275,7 @@ function definingfieldoflifts(JacKbar, KumKbar, pt);
 	F, i_F := sub<K | Eltseq(pt)>;
 	includ := hom<K -> Qbar | Roots(MinimalPolynomial(K.1),Qbar)[1][1]>;
     end if;
-    pt := KumKbar ! includ(Eltseq(pt));
+    pt := KumKbar ! [includ(Eltseq(pt)[i]) : i in [1..4]];
     liftedpt := Points(JacKbar,pt)[1];
     a_coefs := Coefficients(liftedpt[1]);
     b_coefs := Coefficients(liftedpt[2]);
@@ -306,12 +306,25 @@ end function;
 
 
 function modifying_goodsexticpoly(f);
-    P<x> := PolynomialRing(Rationals());
-    a6 := Coefficient(f,6);
-    d := SquareFree(a6);
-    f := f/a6;
-    a5 := Coefficient(f,5);
-    f := Evaluate(f,x-a5/6);
+    P<x> := Parent(f);
+    if Degree(f) eq 6 then
+	a6 := Coefficient(f,6);
+	d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
+	f := f/a6;
+	f := Evaluate(f,x-Coefficient(f,5)/6);
+    elif Degree(f) eq 5 and Evaluate(f,0) eq 0 then
+	f := P ! ((x+1)^6*Evaluate(f,x/(x+1)));
+	a6 := Coefficient(f,6);
+	d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
+	f := f/a6;
+	f := Evaluate(f,x-Coefficient(f,5)/6);
+    else
+	f := P ! (x^6*Evaluate(f,1/x));
+	a6 := Coefficient(f,6);
+	d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
+	f := f/a6;
+	f := Evaluate(f,x-Coefficient(f,5)/6);
+    end if;
     return f, d;
 end function;
 
