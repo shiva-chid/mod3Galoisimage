@@ -6,7 +6,6 @@ X := GSpLattice(4,3,0);
 G := ConformalSymplecticGroup(4,GF(3));
 CC := ConjugacyClasses(G);
 ZG := Subgroups(G);
-// load "ZG.txt";
 
 SG := SymplecticGroup(4,GF(3));
 possible_subs := [];
@@ -19,7 +18,6 @@ for i := 1 to #ZG do
 	end if;
     end for;
 end for;
-// #possible_subs;
 
 U, incl := UnitGroup(GF(3));
 chi := hom<G -> U | [Identity(U),Identity(U),U.1]>;
@@ -175,7 +173,25 @@ end function;
 
 // function to compute maximum dimension of a subgroup of Jac(C)[3] defined over a degree n number field.
 
-function dim_threetors_overnfield(definingpols,n : notnormal := false);
+function monicintegralpol(p);
+    P<x> := Parent(p);
+    degp := Degree(p);
+    p := p/Coefficient(p,degp);
+    for i := 1 to degp do
+	ai := Denominator(Coefficient(p,degp-i));
+	if ai ne 1 then
+	    facai := Factorisation(ai);
+	    ci := &*[fac[1]^(Ceiling(fac[2]/i)) : fac in facai];
+	    p := Evaluate(p,x/ci)*ci^degp;
+	    if LCM([Denominator(Coefficient(p,j)) : j in [0..degp-1]]) eq 1 then
+		break;
+	    end if;
+	end if;
+    end for;
+    return p;    
+end function;
+
+function dim_threetors_overnfield(definingpols,n,expectedorderofGal : notnormal := false, minusoneinGal := true);
     C := HyperellipticCurveOfGenus(2,definingpols[1]+definingpols[2]^2/4);
     f := HyperellipticPolynomials(C);
     coeffs := Coefficients(f);
@@ -197,159 +213,178 @@ function dim_threetors_overnfield(definingpols,n : notnormal := false);
     X := Scheme(P3,temppols2);
 
 
-    A<k1,k2,k3,k4,f0,f1,f2,f3,f4,f5,f6,alpha,l1,l2,l3,l4> := PolynomialRing(RationalField(),16);
-    Pols := [A ! affpols[i] : i in [1..#affpols]];
-    kummeqn := Pols[1];
-    new_pols1 := [kummeqn];
-    new_pols1 := new_pols1 cat [Resultant(Pols[j-1],Pols[j],alpha) : j in [3..#Pols]];
-    new_pols2 := [Resultant(new_pols1[j-1],new_pols1[j],k4) : j in [2..#new_pols1]];
-    new_pols3 := [Resultant(new_pols2[j-1],new_pols2[j],k3) : j in [2..#new_pols2]];
-    D := GCD(new_pols3[1],new_pols3[2]);
-    Fac := Factorisation(D);
+    P<x> := Parent(f);
+    newf, twistbyd := modifying_goodsexticpoly(f);
+    atoe := [Coefficient(newf,4-i) : i in [0..4]];
+    if atoe[2] eq 0 and atoe[4] eq 0 then
+	newf := P ! ((x+1)^6*Evaluate(newf,x/(x+1)));
+	newf, twistbyd1 := modifying_goodsexticpoly(newf);
+	twistbyd *:= twistbyd1;
+	atoe := [Coefficient(newf,4-i) : i in [0..4]];
+    end if;
+    lcmofdens := LCM([Denominator(atoe[i]) : i in [1..#atoe]]);
+    fulltp := torspoly_part1(Rationals(), atoe) + torspoly_part2(Rationals(), atoe);
+    if not IsSeparable(fulltp) then
+//	"Not separable";
+	for a in [1..5] do
+	for b in [1..5] do
+	for c in [1..5] do
+	for d in [1..5] do
+	    if a*d-b*c ne 0 then
+		newf := P ! ((c*x+d)^6*Evaluate(newf,(a*x+b)/(c*x+d)));
+		newf, twistbyd2 := modifying_goodsexticpoly(newf);
+		twistbyd *:= twistbyd2;
+		atoe := [Coefficient(newf,4-i) : i in [0..4]];
+		lcmofdens := LCM([Denominator(atoe[i]) : i in [1..#atoe]]);
+		fulltp := torspoly_part1(Rationals(), atoe) + torspoly_part2(Rationals(), atoe);
+		if IsSeparable(fulltp) then
+//		    "Separable";
+		    break a;
+		end if;
+	    end if;
+	end for;
+	end for;
+	end for;
+	end for;
+    end if;
 
+    if not IsSquare(twistbyd) then
+	ff := fulltp;
+	gg := P ! [Coefficient(ff,2*i) : i in [0..Degree(ff)/2]];
+	ggnew := P ! [Coefficient(gg,i)*twistbyd^(Degree(gg)-i) : i in [0..Degree(gg)]];
+	ffnew := Evaluate(ggnew,x^2);
+    else
+	ffnew := fulltp;
+	ggnew := P ! [Coefficient(ffnew,2*i) : i in [0..Degree(ffnew)/2]];
+    end if;
+
+
+    Fac := Factorisation(ffnew);
+    Facproj := Factorisation(ggnew);
+
+    if minusoneinGal then
+	Ga, Ra, Sa := GaloisGroup(Fac[#Fac][1]);
+	if #Ga ne expectedorderofGal then
+	    Ga, Ra, Sa := GaloisGroup(ffnew);
+	end if;
+    else
+	Ga, Ra, Sa := GaloisGroup(Facproj[#Facproj][1]);
+	if #Ga ne expectedorderofGal then
+	    Ga, Ra, Sa := GaloisGroup(ggnew);
+	end if;
+    end if;
+
+    indexnsubs := Subgroups(Ga : IndexEqual := n);
+    nsubfields := [GaloisSubgroup(Sa,indexnsub`subgroup) : indexnsub in indexnsubs];
+    nirredsubfields := [nsubfield : nsubfield in nsubfields | IsIrreducible(nsubfield)];
 
     max_dim := dim_rationalthreetors(definingpols);
     nfieldK := RationalField();
-    list_of_fields := [];
-
-/* the patch with k1 = 1 suggests we must check the following fields
-of degree dividing n */
-
-    for j := 1 to #Fac do
-	degfac := Degree(Fac[j][1]);
-	if n mod degfac eq 0 then
-	    def_pol := UnivariatePolynomial(Fac[j][1]);
-	    K := NumberField(def_pol);
-//	    print K;
-
-	    JacK := BaseExtend(Jac,K);
-	    KumK := BaseExtend(Kum,K);
-	    zeroptK := KumK ! 0;
-	    XptsK := RationalPoints(X,K);
-	    Kbar := AlgebraicClosure(RationalField());
-	    JacKbar := BaseExtend(JacK,Kbar);
-	    KumKbar := BaseExtend(KumK,Kbar);
-	    count := 0;
-	    for Xpt in XptsK do
-		kumpt := KumK ! Eltseq(Xpt);
-		if 3*kumpt eq zeroptK then
-//		    print kumpt, KumK, Parent(kumpt) eq KumK;
-		    Append(~list_of_fields, definingfieldoflifts(JacKbar,KumKbar,kumpt));
-		    possible_points := Points(JacK, kumpt);
-//		    print #possible_points;
-		    count := count + #possible_points;
-		end if;
-	    end for;
-
-//	    print count;
-	    if notnormal and K ne RationalField() then
-		K := NumberField(monicintegraldefpol(K));
-		if not IsNormal(K) and Degree(K) eq n and Valuation(count,3) ge max_dim then
-		    max_dim := Valuation(count,3);
-		    nfieldK := K;
-		end if;
-	    else
-		if Degree(K) eq n and Valuation(count,3) ge max_dim then
-		    max_dim := Valuation(count,3);
-		    nfieldK := K;
-		end if;
+    for temp in nirredsubfields do
+	L := NumberField(temp);
+	JacL := BaseExtend(Jac,L);
+	KumL := BaseExtend(Kum,L);
+	zeroptL := KumL ! 0;
+	XptsL := RationalPoints(X,L);
+	count := 0;
+	for Xpt in XptsL do
+	    kumpt := KumL ! Eltseq(Xpt);
+	    if 3*kumpt eq zeroptL then
+		possible_points := Points(JacL, kumpt);
+//		print #possible_points;
+		count := count + #possible_points;
 	    end if;
+	end for;
 
-	end if;
-    end for;
-
-/* the patch with k1 = 0 and k2 = 1 suggests we must check the following fields
-of degree dividing n */
-
-    A<k1,k2,k3,k4,f0,f1,f2,f3,f4,f5,f6,alpha,l1,l2,l3,l4> := PolynomialRing(RationalField(),16);
-    Pols := [A ! hompols[i] : i in [1..#hompols]];
-    kummeqn := Pols[1];
-    new_pols1 := [kummeqn];
-    new_pols1 := new_pols1 cat [Resultant(Pols[j-1],Pols[j],alpha) : j in [3..#Pols]];
-    new_pols1 := [Evaluate(Evaluate(new_pols1[j],k1,0),k2,1) : j in [1..#new_pols1]];
-    new_pols2 := [Resultant(new_pols1[j-1],new_pols1[j],k4) : j in [2..#new_pols1]];
-    D := GCD(GCD(new_pols2[1],new_pols2[2]),new_pols2[3]);
-    Fac := Factorisation(D);
-
-    for j := 1 to #Fac do
-	degfac := Degree(Fac[j][1]);
-	if n mod degfac eq 0 then
-	    def_pol := UnivariatePolynomial(Fac[j][1]);
-	    K := NumberField(def_pol);
-//	    print K;
-
-	    JacK := BaseExtend(Jac,K);
-	    KumK := BaseExtend(Kum,K);
-	    zeroptK := KumK ! 0;
-	    XptsK := RationalPoints(X,K);
-	    Kbar := AlgebraicClosure(RationalField());
-	    JacKbar := BaseExtend(JacK,Kbar);
-	    KumKbar := BaseExtend(KumK,Kbar);
-	    count := 0;
-	    for Xpt in XptsK do
-		kumpt := KumK ! Eltseq(Xpt);
-		if 3*kumpt eq zeroptK then
-//		    print kumpt;
-		    Append(~list_of_fields, definingfieldoflifts(JacKbar,KumKbar,kumpt));
-		    possible_points := Points(JacK, kumpt);
-//		    print #possible_points;
-		    count := count + #possible_points;
-		end if;
-	    end for;
-
-//	    print count;
-	    if notnormal and K ne RationalField() then
-		K := NumberField(monicintegraldefpol(K));
-		if not IsNormal(K) and Degree(K) eq n and Valuation(count,3) ge max_dim then
-		    max_dim := Valuation(count,3);
-		    nfieldK := K;
-		end if;
-	    else
-		if Degree(K) eq n and Valuation(count,3) ge max_dim then
-		    max_dim := Valuation(count,3);
-		    nfieldK := K;
-		end if;
+//	print count;
+	if notnormal then
+	    if not IsNormal(NumberField(monicintegralpol(DefiningPolynomial(L)))) and Valuation(count,3) ge max_dim then
+		max_dim := Valuation(count,3);
+		nfieldK := L;
+//		print max_dim, nfieldK;
 	    end if;
-
-	end if;
-    end for;
-
-/*
-    print list_of_fields;
-*/
-    for x in list_of_fields do
-	L := NumberField(x);
-	if Degree(L) eq n then
-	    JacL := BaseExtend(Jac,L);
-	    KumL := BaseExtend(Kum,L);
-	    zeroptL := KumL ! 0;
-	    XptsL := RationalPoints(X,L);
-	    count := 0;
-	    for Xpt in XptsL do
-		kumpt := KumL ! Eltseq(Xpt);
-		if 3*kumpt eq zeroptL then
-		    possible_points := Points(JacL, kumpt);
-//		    print #possible_points;
-		    count := count + #possible_points;
-		end if;
-	    end for;
-
-//	    print count;
-	    if notnormal and L ne RationalField() then
-		if not IsNormal(L) and Valuation(count,3) ge max_dim then
-		    max_dim := Valuation(count,3);
-		    nfieldK := L;
-		end if;
-	    else
-		if Valuation(count,3) ge max_dim then
-		    max_dim := Valuation(count,3);
-		    nfieldK := L;
-		end if;
+	else
+	    if Valuation(count,3) ge max_dim then
+		max_dim := Valuation(count,3);
+		nfieldK := L;
 	    end if;
 	end if;
     end for;
-
     return max_dim, nfieldK;
+end function;
+
+
+function projthreetorsGal(defpols,projimageorder);
+    f := defpols[1]+defpols[2]^2/4;
+    P<x> := Parent(f);
+    newf, twistbyd := modifying_goodsexticpoly(f);
+    atoe := [Coefficient(newf,4-i) : i in [0..4]];
+    if atoe[2] eq 0 and atoe[4] eq 0 then
+	newf := P ! ((x+1)^6*Evaluate(newf,x/(x+1)));
+	newf, twistbyd1 := modifying_goodsexticpoly(newf);
+	twistbyd *:= twistbyd1;
+	atoe := [Coefficient(newf,4-i) : i in [0..4]];
+    end if;
+    lcmofdens := LCM([Denominator(atoe[i]) : i in [1..#atoe]]);
+    fulltp := torspoly_part1(Rationals(), atoe) + torspoly_part2(Rationals(), atoe);
+
+    if not IsSeparable(fulltp) then
+//	"Not separable";
+	for a in [1..5] do
+	for b in [1..5] do
+	for c in [1..5] do
+	for d in [1..5] do
+	    if a*d-b*c ne 0 then
+		newf := P ! ((c*x+d)^6*Evaluate(newf,(a*x+b)/(c*x+d)));
+		newf, twistbyd2 := modifying_goodsexticpoly(newf);
+		twistbyd *:= twistbyd2;
+		atoe := [Coefficient(newf,4-i) : i in [0..4]];
+		lcmofdens := LCM([Denominator(atoe[i]) : i in [1..#atoe]]);
+		fulltp := torspoly_part1(Rationals(), atoe) + torspoly_part2(Rationals(), atoe);
+		if IsSeparable(fulltp) then
+//		    "Separable";
+		    break a;
+		end if;
+	    end if;
+	end for;
+	end for;
+	end for;
+	end for;
+    end if;
+
+    if not IsSquare(twistbyd) then
+	ff := fulltp;
+	gg := P ! [Coefficient(ff,2*i) : i in [0..Degree(ff)/2]];
+	ggnew := P ! [Coefficient(gg,i)*twistbyd^(Degree(gg)-i) : i in [0..Degree(gg)]];
+	ffnew := Evaluate(ggnew,x^2);
+    else
+	ffnew := fulltp;
+	ggnew := P ! [Coefficient(ffnew,2*i) : i in [0..Degree(ffnew)/2]];
+    end if;
+    Facproj := Factorisation(ggnew);
+    Ga := GaloisGroup(Facproj[#Facproj][1] : Type := "Complex");
+    if #Ga eq projimageorder then
+	return IdentifyGroup(Ga);
+    else
+	poly := Facproj[#Facproj][1];
+	P2<t,u> := PolynomialRing(Rationals(),2);
+	for j := #Facproj-1 to 1 by -1 do
+	    newfac := Facproj[j][1];
+	    poly := Resultant(Evaluate(poly,t),Evaluate(newfac,u-t),t);
+	    poly := P ! UnivariatePolynomial(poly);
+	    if IsIrreducible(poly) then
+		Ga := GaloisGroup(poly : Type := "Complex");
+		if #Ga eq projimageorder then
+		    return IdentifyGroup(Ga);
+		end if;
+	    elif projimageorder le 36 then
+		Ga := GaloisGroup(poly);
+		if #Ga eq projimageorder then
+		    return IdentifyGroup(Ga);
+		end if;
+	    end if;
+	end for;
+    end if;
 end function;
 
 
@@ -455,7 +490,7 @@ function distinguish(defpols, poss);
 	    end for;
 	    if dim_rationalthreetors(defpols) eq 1 then
 		return possreordered[1], [ZG[possreordered[1][j]]`subgroup : j in [1..#possreordered[1]]];
-	    elif dim_threetors_overnfield(defpols,3) eq 1 then
+	    elif dim_threetors_overnfield(defpols,3,324 : minusoneinGal := false) eq 1 then
 		return possreordered[2], [ZG[possreordered[2][j]]`subgroup : j in [1..#possreordered[2]]];
 	    elif dim_cyclotomicthreetors(defpols) eq 1 then
 		return possreordered[3], [ZG[possreordered[3][j]]`subgroup : j in [1..#possreordered[3]]];
@@ -466,52 +501,45 @@ function distinguish(defpols, poss);
 	    possreordered := poss;
 	    for i := 1 to #poss do
 		if max_pts_over_ext(ZG[poss[i][1]]`subgroup,1) eq 1 then
-		    if max_pts_over_ext(ZG[poss[i][1]]`subgroup,3) eq 2 then
+		    if IdentifyGroup(ZG[poss[i][1]]`subgroup) eq <162,19> then
 			possreordered[1] := poss[i];
-		    else
+		    elif IdentifyGroup(ZG[poss[i][1]]`subgroup) eq <162,11> then
 			possreordered[2] := poss[i];
 		    end if;
-		elif max_pts_over_ext(ZG[poss[i][1]]`subgroup,3) eq 1 then
-		    possreordered[3] := poss[i];
 		else
-		    possreordered[4] := poss[i];
+		    if IdentifyGroup(ZG[poss[i][1]]`subgroup) eq <162,19> then
+			possreordered[3] := poss[i];
+		    elif IdentifyGroup(ZG[poss[i][1]]`subgroup) eq <162,11> then
+			possreordered[4] := poss[i];
+		    end if;
 		end if;
 	    end for;
 	    if dim_rationalthreetors(defpols) eq 1 then
-		if dim_threetors_overnfield(defpols,3) eq 2 then
+		idGal := projthreetorsGal(defpols,162);
+		if idGal eq <162,19> then
 		    return possreordered[1], [ZG[possreordered[1][j]]`subgroup : j in [1..#possreordered[1]]];
-		else
+		elif idGal eq <162,11> then
 		    return possreordered[2], [ZG[possreordered[2][j]]`subgroup : j in [1..#possreordered[2]]];
 		end if;
-	    elif dim_threetors_overnfield(defpols,3) eq 1 then
-		return possreordered[3], [ZG[possreordered[3][j]]`subgroup : j in [1..#possreordered[3]]];
 	    else
-		return possreordered[4], [ZG[possreordered[4][j]]`subgroup : j in [1..#possreordered[4]]];
+		idGal := projthreetorsGal(defpols,162);
+		if idGal eq <162,19> then
+		    return possreordered[3], [ZG[possreordered[3][j]]`subgroup : j in [1..#possreordered[3]]];
+		elif idGal eq <162,11> then
+		    return possreordered[4], [ZG[possreordered[4][j]]`subgroup : j in [1..#possreordered[4]]];
+		end if;
 	    end if;
 	end if;
     elif #poss eq 2 then
 	n := final_test(poss);
-	if n eq -1 then
-	    C := HyperellipticCurveOfGenus(2,defpols);
-	    C1 := SimplifiedModel(C);
-	    f1 := HyperellipticPolynomials(C1);
-	    f1_twisted, twistby_d := modifying_goodsexticpoly(f1);
-	    atoe := [Coefficient(f1_twisted,4-j) : j in [0..4]];
-	    torspoly1 := torspoly_part1(Rationals(), atoe);
-	    torspoly2 := torspoly_part2(Rationals(), atoe);
-	    fulltorspoly := torspoly1 + torspoly2;
-	    Fac := Factorisation(fulltorspoly);
-	    Gal := GaloisGroup(&*[pol : pol in [x[1] : x in Fac] | Degree(pol) gt 1]);
-	    idGal := IdentifyGroup(Gal);
+	if (n eq -1) or (n eq 6) or (n eq 8 and ZG[poss[1][1]]`order eq 32) then
+	    idGal := projthreetorsGal(defpols,ZG[poss[1][1]]`order/2);
+	    minusone := Center(G).1;
 	    for i := 1 to #poss do
-		if IdentifyGroup(ZG[poss[i][1]]`subgroup) eq idGal then
+		if IdentifyGroup(quo<ZG[poss[i][1]]`subgroup|minusone>) eq idGal then
 		    return poss[i], [ZG[poss[i][j]]`subgroup : j in [1..#poss[i]]];
 		end if;
 	    end for;
-// This is the twisted Galois group.
-// But the Galois group for f1 will also be the same.
-// This is because -Id belongs to each of the four possible groups that arise in this case, and furthermore
-// -Id belongs to all the index 2 subgroups of each of these four possible groups.
 	elif n eq 1 then
 	    dimtors := dim_rationalthreetors(defpols);
 	    for i := 1 to #poss do
@@ -519,15 +547,22 @@ function distinguish(defpols, poss);
 		    return poss[i], [ZG[poss[i][j]]`subgroup : j in [1..#poss[i]]];
 		end if;
 	    end for;
-	elif (n gt 1 and n le 6) or (n eq 8 and ZG[poss[1][1]]`order eq 32) then
-	    dimtors := dim_threetors_overnfield(defpols,n);
+	elif n eq 2 then
+	    dimtors := dim_threetors_overnfield(defpols,n,ZG[poss[1][1]]`order);
+	    for i := 1 to #poss do
+		if max_pts_over_ext(ZG[poss[i][1]]`subgroup,n) eq dimtors then
+		    return poss[i], [ZG[poss[i][j]]`subgroup : j in [1..#poss[i]]];
+		end if;
+	    end for;
+	elif n eq 3 then
+	    dimtors := dim_threetors_overnfield(defpols,n,ZG[poss[1][1]]`order : minusoneinGal := false);
 	    for i := 1 to #poss do
 		if max_pts_over_ext(ZG[poss[i][1]]`subgroup,n) eq dimtors then
 		    return poss[i], [ZG[poss[i][j]]`subgroup : j in [1..#poss[i]]];
 		end if;
 	    end for;
 	else
-	    dimtors := dim_threetors_overnfield(defpols,4 : notnormal := true);
+	    dimtors := dim_threetors_overnfield(defpols,4,ZG[poss[1][1]]`order : notnormal := true, minusoneinGal := false);
 	    Hcand := ZG[poss[1][1]]`subgroup;
 	    Mcand := GModule(Hcand);
 	    ZHcand := [Kind`subgroup : Kind in Subgroups(Hcand) | Kind`order eq #Hcand/4];
@@ -571,13 +606,30 @@ function find3torsimage(cond,definingpols : primesstart := 3, primesend := 500, 
 	    iii := Index(sigs,sigp);
 	    list_of_counts[iii] := list_of_counts[iii]+1;
 	end if;
+/*
+	if N mod 100 eq 0 then
+	    print N;
+	end if;
+*/
     end for;
     totalprimes := &+list_of_counts;
     freqstat := [list_of_counts[i]/totalprimes : i in [1..#list_of_counts]];
     sigsshowingup := allvalidsigs(freqstat);
 
-    if #sigsshowingup eq 18 or (#sigsshowingup eq 17 and not 1 in sigsshowingup) then
+/*
+    if #sigsshowingup eq 2 then
+	return subs_with_sigstat[211][1], ZG[subs_with_sigstat[211][1][1]]`order;
+    elif #sigsshowingup eq 16 then
+	return subs_with_sigstat[7][1], ZG[subs_with_sigstat[7][1][1]]`order;
+    elif #sigsshowingup eq 17 then
+	return subs_with_sigstat[3][1], ZG[subs_with_sigstat[3][1][1]]`order;
+    elif #sigsshowingup eq 18 then
 	return subs_with_sigstat[1][1], ZG[subs_with_sigstat[1][1][1]]`order;
+    end if;
+*/
+
+    if #sigsshowingup eq 18 or (#sigsshowingup eq 17 and not 1 in sigsshowingup) then
+	return subs_with_sigstat[1][1], ZG[subs_with_sigstat[1][1][1]]`subgroup;
     end if;
 
     V := VectorSpace(RealField(),18);
@@ -604,14 +656,13 @@ function find3torsimage(cond,definingpols : primesstart := 3, primesend := 500, 
     elif #possibilities[1] gt 1 then
 //	print "Sampled data about frobenius cannot distinguish the image upto GL conjugacy uniquely.";
 //	print "The image could be a subgroup of one of the following index:";
-//	print possibilities[1];
+//	print possibilities[1], final_test(possibilities[1]);
 //	print "Looking at global data to distinguish between the", #possibilities[1], "possible images...";
 	return distinguish(definingpols,possibilities[1]);
     else
 	return possibilities[1][1], [ZG[possibilities[1][1][j]]`subgroup : j in [1..#possibilities[1][1]]];
     end if;
 end function;
-// #G, #ZG, #possible_subs, #all_sigstats, #subs_with_sigstat, #allmindists;
 
 
 // ###########################################################################################################
@@ -682,8 +733,6 @@ function seconddistinguish(defpols, poss);
 	p := NextPrime(p);
 	if badprimes mod p ne 0 then
 	    kp3 := GF(p,3);
-//	    kp6 := GF(p,6);
-//	    kp12 := GF(p,12);
 	    Jackp3 := BaseExtend(JacC1,kp3);
 	    A, phi := AbelianGroup(Jackp3);
 	    if #quo<A|3*A> eq 81 then
@@ -715,7 +764,6 @@ function seconddistinguish(defpols, poss);
 		sigmabasiscoords := [coords[Index(all_pts_k,sigmabasis[i])] : i in [1..#sigmabasis]];
 		frobpmat := G ! Matrix(GF(3),4,4,sigmabasiscoords);
 		indi := elmtconjugacyindex(frobpmat);
-//		p, kp3, indi;
 		if Order(frobpmat) eq 3 and indi in ccs1 then
 		    return poss[1], ZG[poss[1]]`subgroup;
 		elif Order(frobpmat) eq 3 and indi in ccs2 then
@@ -764,9 +812,6 @@ function threetorsfield(defpols, n : ignoretwists := false);
 	end for;
     end if;
     Fac := Factorisation(fulltp);
-/*
-    [Degree(g[1]) : g in Fac];
-*/
     if ignoretwists then
 	K := SplittingField(Fac[#Fac][1]);
     else
@@ -776,9 +821,6 @@ function threetorsfield(defpols, n : ignoretwists := false);
 	ffnew := Evaluate(ggnew,x^2);
 	K := SplittingField(ffnew);
     end if;
-/*
-    K;
-*/
     if Degree(K) eq n or Degree(K) eq 2*n then
 	return K, lcmofdens;
     else
@@ -793,18 +835,6 @@ function threetorsfield(defpols, n : ignoretwists := false);
 	    end if;
  	end for;
     end if;
-
-/*
-    nontrivialfacs := [g[1] : g in Fac | Degree(g[1]) ne 1];
-    K := SplittingField(nontrivialfacs[1]); K;
-    i := 2;
-    while (Degree(K) ne n and Degree(K) ne 2*n) do
-	K := SplittingField(ChangeRing(nontrivialfacs[i],K));
-	K := AbsoluteField(K); K;
-	K := OptimizedRepresentation(K); K;
-	i := i + 1;
-    end while;
-*/
     return K, lcmofdens;
 end function;
 
@@ -815,7 +845,6 @@ function thirddistinguish(defpols, poss);
     badprimes := &*BadPrimes(C1)*2;
     P<x> := PolynomialRing(Rationals());
     K, lcmofdens := threetorsfield(defpols, ZG[poss[1]]`order);
-//    K := OptimizedRepresentation(K); K;
     Jac := Jacobian(C1);
     JacK := BaseExtend(Jac,K);
     KumK := KummerSurface(JacK);
@@ -834,9 +863,6 @@ function thirddistinguish(defpols, poss);
     P3 := ProjectiveSpace(K,3);
     X := Scheme(P3,temppols2);
     Xpts := RationalPoints(X);
-/*
-    #Xpts;
-*/
     all_pts := [];
     count := 0;
     for Xpt in Xpts do
@@ -845,189 +871,138 @@ function thirddistinguish(defpols, poss);
 	    possible_points := Points(JacK, kumpt);
 	    count +:= #possible_points;
 	    all_pts := all_pts cat SetToSequence(possible_points);
-//	    if count mod 9 eq 0 or count mod 9 eq 1 then
-//		print count;
-//	    end if;
 	end if;
     end for;
-/*
-    count, #all_pts;
-*/
 
-if #all_pts ne 81 then
-    return 0, "Error";
-end if;
-
-defK := DefiningPolynomial(K);
-dens := 1;
-for i := 1 to #all_pts do
-    if all_pts[i] ne JacK ! 0 then
-	dens1 := LCM([LCM([Denominator(coe[j]) : j in [1..Degree(K)]]) : coe in Coefficients(all_pts[i][1])]);
-	dens2 := LCM([LCM([Denominator(coe[j]) : j in [1..Degree(K)]]) : coe in Coefficients(all_pts[i][2])]);
-	dens := LCM([dens,dens1,dens2]);
+    if #all_pts ne 81 then
+	print "Did not find the correct three torsion field to distinguish 
+between the possibilities", [GSpLookupLabel(X,ZG[ps]`subgroup) : ps in poss];
+	return 0, "Error";
     end if;
-end for;
+
+    defK := DefiningPolynomial(K);
+    dens := 1;
+    for i := 1 to #all_pts do
+	if all_pts[i] ne JacK ! 0 then
+	    dens1 := LCM([LCM([Denominator(coe[j]) : j in [1..Degree(K)]]) : coe in Coefficients(all_pts[i][1])]);
+	    dens2 := LCM([LCM([Denominator(coe[j]) : j in [1..Degree(K)]]) : coe in Coefficients(all_pts[i][2])]);
+	    dens := LCM([dens,dens1,dens2]);
+	end if;
+    end for;
 
 /* Fixing a symplectic basis */
 
-basisfound := false;
-p := 4;
-while not basisfound do
-    p := NextPrime(p);
-    if badprimes mod p ne 0 and lcmofdens mod p ne 0 and dens mod p ne 0 then
-	k := SplittingField(ChangeRing(defK,GF(p)));
-	Roos := Roots(defK,k);
-//	#Roos eq Degree(K);
-	alp := Roos[1][1];
-	Jack := BaseExtend(JacK,k);
-	all_pts_k := [];
-	Pred<x> := PolynomialRing(k);
-	for i := 1 to #all_pts do
-	    pt1 := Coefficients(all_pts[i][1]);
-	    pt2 := Coefficients(all_pts[i][2]);
-	    pt3 := all_pts[i][3];
-	    pt1red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)]] : coe in pt1];
-	    pt2red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)] ] : coe in pt2];
-//	    print pt1red, pt2red, pt3;
-	    reducedpt := elt<Jack | [pt1red,pt2red]>;
-//	    i, 3*reducedpt eq Jack ! 0;
-	    Append(~all_pts_k,reducedpt);
-	end for;
-//	#all_pts_k;
-
-
-
-
-/*
-	dp := Decomposition(K,p);
-	pl := dp[1][1];
-	k := ResidueClassField(dp[1][1]);
-	k;
-	Jack := BaseExtend(JacK,k);
-	all_pts_k := [];
-	Pred<x> := PolynomialRing(k);
-	for i := 1 to #all_pts do
-	    if all_pts[i] eq JacK ! 0 then
-		Append(~all_pts_k, Jack ! 0);
-	    else
-		firstcoordreduced := Pred ! [Evaluate(coe,pl) : coe in Coefficients(all_pts[i][1])];
-		secondcoordreduced := Pred ! [Evaluate(coe,pl) : coe in Coefficients(all_pts[i][2])];
-		reducedpt := elt<Jack | firstcoordreduced, secondcoordreduced, all_pts[i][3]>;
+    basisfound := false;
+    p := 4;
+    while not basisfound do
+	p := NextPrime(p);
+	if badprimes mod p ne 0 and lcmofdens mod p ne 0 and dens mod p ne 0 then
+	    k := SplittingField(ChangeRing(defK,GF(p)));
+	    Roos := Roots(defK,k);
+	    alp := Roos[1][1];
+	    Jack := BaseExtend(JacK,k);
+	    all_pts_k := [];
+	    Pred<x> := PolynomialRing(k);
+	    for i := 1 to #all_pts do
+		pt1 := Coefficients(all_pts[i][1]);
+		pt2 := Coefficients(all_pts[i][2]);
+		pt3 := all_pts[i][3];
+		pt1red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)]] : coe in pt1];
+		pt2red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)] ] : coe in pt2];
+		reducedpt := elt<Jack | [pt1red,pt2red]>;
 		Append(~all_pts_k,reducedpt);
-	    end if;
-	end for;
-*/
+	    end for;
 
-	for i := 1 to #all_pts_k do
-	P1 := all_pts_k[i];
-	if P1 ne Jack ! 0 then
-	    for j := 1 to #all_pts_k do
-	    P4 := all_pts_k[j];
-	    zeta3 := WeilPairing(P1,P4,3);
-	    if zeta3 ne 1 then
-		for i2 := 1 to #all_pts_k do
-		P2 := all_pts_k[i2];	
-		if WeilPairing(P1,P2,3) eq 1 and WeilPairing(P4,P2,3) eq 1 then
-		    for j2 := 1 to #all_pts_k do
-		    P3 := all_pts_k[j2];
-		    if WeilPairing(P1,P3,3) eq 1 and WeilPairing(P4,P3,3) eq 1 and WeilPairing(P2,P3,3) eq zeta3 then
-			basisfound := true;
-			break i;
-		    end if;
+	    for i := 1 to #all_pts_k do
+		P1 := all_pts_k[i];
+		if P1 ne Jack ! 0 then
+		    for j := 1 to #all_pts_k do
+			P4 := all_pts_k[j];
+			zeta3 := WeilPairing(P1,P4,3);
+			if zeta3 ne 1 then
+			    for i2 := 1 to #all_pts_k do
+				P2 := all_pts_k[i2];	
+				if WeilPairing(P1,P2,3) eq 1 and WeilPairing(P4,P2,3) eq 1 then
+				    for j2 := 1 to #all_pts_k do
+					P3 := all_pts_k[j2];
+					if WeilPairing(P1,P3,3) eq 1 and WeilPairing(P4,P3,3) eq 1 and WeilPairing(P2,P3,3) eq zeta3 then
+					    basisfound := true;
+					    break i;
+					end if;
+				    end for;
+				end if;
+			    end for;
+			end if;
 		    end for;
 		end if;
-		end for;
-	    end if;
 	    end for;
-	end if;
-	end for;
 
-	if basisfound then
-//	    "Basis found";
-	    basismodp := [P1, P2, P3, P4];
-	    basisindices := [Index(all_pts_k,basismodp[i]) : i in [1..#basismodp]];
-	    basis := [all_pts[basisindices[i]] : i in [1..#basisindices]];
+	    if basisfound then
+		basismodp := [P1, P2, P3, P4];
+		basisindices := [Index(all_pts_k,basismodp[i]) : i in [1..#basismodp]];
+		basis := [all_pts[basisindices[i]] : i in [1..#basisindices]];
+	    end if;
 	end if;
-    end if;
-end while;
+    end while;
 
 /* Computing frobenius images for several primes with respect to the fixed basis
 and deducing the three-torsion Galois image. */
 
-/*
-dens := 1;
-for i := 1 to #basis do
- dens1 := LCM([LCM([Denominator(coe[j]) : j in [1..Degree(K)]]) : coe in Coefficients(basis[i][1])]);
- dens2 := LCM([LCM([Denominator(coe[j]) : j in [1..Degree(K)]]) : coe in Coefficients(basis[i][2])]);
- dens := LCM([dens,dens1,dens2]);
-end for;
-dens;
-*/
+    torsimage := sub<G | Identity(G)>;
+    while true do
+	basisk := basismodp;
+	all_pts_k := [];
+	coords := [];
+	for i1 := 0 to 2 do
+	    for i2 := 0 to 2 do
+		for i3 := 0 to 2 do
+		    for i4 := 0 to 2 do
+			po := i1*basisk[1] + i2*basisk[2] + i3*basisk[3] + i4*basisk[4];
+			Append(~all_pts_k,po);
+			Append(~coords,[i1, i2, i3, i4]);
+		    end for;
+		end for;
+	    end for;
+	end for;
 
-torsimage := sub<G | Identity(G)>;
-while true do
-    basisk := basismodp;
-    all_pts_k := [];
-    coords := [];
-    for i1 := 0 to 2 do
-    for i2 := 0 to 2 do
-    for i3 := 0 to 2 do
-    for i4 := 0 to 2 do
-	po := i1*basisk[1] + i2*basisk[2] + i3*basisk[3] + i4*basisk[4];
-	Append(~all_pts_k,po);
-	Append(~coords,[i1, i2, i3, i4]);
-    end for;
-    end for;
-    end for;
-    end for;
+	sigmabasis := [];
+	for i := 1 to #basisk do
+	    Pi := basisk[i];
+	    sigmai1 := Pred ! [Frobenius(coe) : coe in Coefficients(Pi[1])];
+	    sigmai2 := Pred ! [Frobenius(coe) : coe in Coefficients(Pi[2])];
+	    sigmai3 := Pi[3];
+	    sigmaPi := elt<Jack | sigmai1, sigmai2, sigmai3>;
+	    Append(~sigmabasis,sigmaPi);
+	end for;
 
-    sigmabasis := [];
-    for i := 1 to #basisk do
-	Pi := basisk[i];
-	sigmai1 := Pred ! [Frobenius(coe) : coe in Coefficients(Pi[1])];
-	sigmai2 := Pred ! [Frobenius(coe) : coe in Coefficients(Pi[2])];
-	sigmai3 := Pi[3];
-	sigmaPi := elt<Jack | sigmai1, sigmai2, sigmai3>;
-	Append(~sigmabasis,sigmaPi);
-    end for;
+	sigmabasiscoords := [coords[Index(all_pts_k,sigmabasis[i])] : i in [1..#sigmabasis]];
+	frobpmat := G ! Matrix(GF(3),4,4,sigmabasiscoords);
+	torsimage := sub<G | torsimage, frobpmat>;
+	n := conjugacyindex(torsimage);
+	if n in poss then
+	    return n, ZG[n]`subgroup;
+	end if;
 
-    sigmabasiscoords := [coords[Index(all_pts_k,sigmabasis[i])] : i in [1..#sigmabasis]];
-    frobpmat := G ! Matrix(GF(3),4,4,sigmabasiscoords);
-    torsimage := sub<G | torsimage, frobpmat>;
-    n := conjugacyindex(torsimage);
-    if n in poss then
-	return n, ZG[n]`subgroup;
-    end if;
-
-
-    p := NextPrime(p);
-    while dens mod p eq 0 do
 	p := NextPrime(p);
+	while dens mod p eq 0 do
+	    p := NextPrime(p);
+	end while;
+	k := SplittingField(ChangeRing(defK,GF(p)));
+	Roos := Roots(defK,k);
+	alp := Roos[1][1];
+	Pred<x> := PolynomialRing(k);
+	Jack := BaseExtend(JacK,k);
+	basismodp := [];
+	for i := 1 to #basis do
+	    pt1 := Coefficients(basis[i][1]);
+	    pt2 := Coefficients(basis[i][2]);
+	    pt3 := basis[i][3];
+	    pt1red := Pred ! [&+[k ! (coe[j])*alp^(j-1) : j in [1..Degree(K)]] : coe in pt1];
+	    pt2red := Pred ! [&+[k ! (coe[j])*alp^(j-1) : j in [1..Degree(K)] ] : coe in pt2];
+	    reducedpt := elt<Jack | [pt1red,pt2red]>;
+	    Append(~basismodp,reducedpt);
+	end for;
     end while;
-    k := SplittingField(ChangeRing(defK,GF(p)));
-    Roos := Roots(defK,k);
-/*
-    #Roos eq Degree(K);
-*/
-    alp := Roos[1][1];
-    Pred<x> := PolynomialRing(k);
-    Jack := BaseExtend(JacK,k);
-    basismodp := [];
-    for i := 1 to #basis do
-	pt1 := Coefficients(basis[i][1]);
-	pt2 := Coefficients(basis[i][2]);
-	pt3 := basis[i][3];
-	pt1red := Pred ! [&+[k ! (coe[j])*alp^(j-1) : j in [1..Degree(K)]] : coe in pt1];
-	pt2red := Pred ! [&+[k ! (coe[j])*alp^(j-1) : j in [1..Degree(K)] ] : coe in pt2];
-//	print pt1red, pt2red, pt3;
-	reducedpt := elt<Jack | [pt1red,pt2red]>;
-//	i, 3*reducedpt eq Jack ! 0;
-	Append(~basismodp,reducedpt);
-    end for;
-/*
-    #basismodp eq 4;
-*/
-end while;
 end function;
 
 
@@ -1035,19 +1010,19 @@ function threetorsimage(C);
     cond := &*BadPrimes(C)*2;
     f,h := HyperellipticPolynomials(C);
     defpols := [f,h];
-    poss, useless := find3torsimage(cond, defpols);
-    if #poss eq 1 then
-	torsimage := ZG[poss[1]]`subgroup;
-	label := GSpLookupLabel(X,torsimage);
-	return label, torsimage;
-    elif #poss eq 3 or PrimeFactors(ZG[poss[1]]`order) eq [2] then
-	torsimageind, torsimage := thirddistinguish(defpols, poss);
-	label := GSpLookupLabel(X,torsimage);
-	return label, torsimage;
+    possibilities, possiblesubgroups := find3torsimage(cond, defpols);
+    if #possibilities eq 1 then
+	torsimg := ZG[possibilities[1]]`subgroup;
+	torsimglabel := GSpLookupLabel(X,torsimg);
+	return torsimglabel, X[torsimglabel]`subgroup;
+    elif #possibilities eq 3 or PrimeFactors(ZG[possibilities[1]]`order) eq [2] then
+	torsimgind, torsimg := thirddistinguish(defpols, possibilities);
+	torsimglabel := GSpLookupLabel(X,torsimg);
+	return torsimglabel, X[torsimglabel]`subgroup;
     else
-	torsimageind, torsimage := seconddistinguish(defpols, poss);
-	label := GSpLookupLabel(X,torsimage);
-	return label, torsimage;
+	torsimgind, torsimg := seconddistinguish(defpols, possibilities);
+	torsimglabel := GSpLookupLabel(X,torsimg);
+	return torsimglabel, X[torsimglabel]`subgroup;
     end if;
 end function;
 

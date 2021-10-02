@@ -252,58 +252,6 @@ f5*f0^2*f6*k2^2*l1+16*f2*f0*f6*k2^2*l2*f3*l1+16*l2^2*f2*f0*f6*k2*k1*f3+16*f2*f0
     return Pols, Affine_Pols;
 end function;
 
-function monicintegraldefpol(numfld);
-    defpolnf := DefiningPolynomial(numfld);
-    P<t> := Parent(defpolnf);
-    coefs := Coefficients(defpolnf);
-    coefs := [coefs[i]/coefs[#coefs] : i in [1..#coefs]];
-    dencoefs := [Denominator(coefs[i]) : i in [1..#coefs]];
-    lcmofdens := 1;
-    for den in dencoefs do
-	lcmofdens := LCM(lcmofdens,den);
-    end for;
-    return &+[coefs[i]*lcmofdens^(#coefs-i)*t^(i-1) : i in [1..#coefs]];
-end function;
-
-function definingfieldoflifts(JacKbar, KumKbar, pt);
-    K := BaseRing(Parent(pt));
-    Qbar := BaseRing(KumKbar);
-    if K eq RationalField() then
-	F := K;
-	includ := hom<K -> Qbar | []>;
-    else
-	F, i_F := sub<K | Eltseq(pt)>;
-	includ := hom<K -> Qbar | Roots(MinimalPolynomial(K.1),Qbar)[1][1]>;
-    end if;
-    pt := KumKbar ! [includ(Eltseq(pt)[i]) : i in [1..4]];
-    liftedpt := Points(JacKbar,pt)[1];
-    a_coefs := Coefficients(liftedpt[1]);
-    b_coefs := Coefficients(liftedpt[2]);
-    L := F;
-    LK := K;
-    for x in a_coefs do
-	minpolx := MinimalPolynomial(x);
-	if #Roots(minpolx,L) eq 0 then
-	    L := ext<L|Factorisation(minpolx)[1][1]>;
-	end if;
-	if #Roots(minpolx,LK) eq 0 then
-	    LK := ext<LK|Factorisation(minpolx)[1][1]>;
-	end if;
-    end for;
-    for x in b_coefs do
-	minpolx := MinimalPolynomial(x);
-	if #Roots(minpolx,L) eq 0 then
-	    L := ext<L|Factorisation(minpolx,L)[1][1]>;
-	end if;
-	if #Roots(minpolx,LK) eq 0 then
-	    LK := ext<LK|Factorisation(minpolx,LK)[1][1]>;
-	end if;
-    end for;
-    L := AbsoluteField(L);
-    LK := AbsoluteField(LK);
-    return monicintegraldefpol(L), monicintegraldefpol(LK);
-end function;
-
 
 function modifying_goodsexticpoly(f);
     P<x> := Parent(f);
@@ -315,9 +263,13 @@ function modifying_goodsexticpoly(f);
     elif Degree(f) eq 5 and Evaluate(f,0) eq 0 then
 	f := P ! ((x+1)^6*Evaluate(f,x/(x+1)));
 	a6 := Coefficient(f,6);
-	d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
-	f := f/a6;
-	f := Evaluate(f,x-Coefficient(f,5)/6);
+	if a6 ne 0 then
+	    d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
+	    f := f/a6;
+	    f := Evaluate(f,x-Coefficient(f,5)/6);
+	else
+	    return modifying_goodsexticpoly(f);
+	end if;
     else
 	f := P ! (x^6*Evaluate(f,1/x));
 	a6 := Coefficient(f,6);
