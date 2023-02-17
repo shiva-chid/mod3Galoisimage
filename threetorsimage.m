@@ -1006,11 +1006,11 @@ and deducing the three-torsion Galois image. */
 end function;
 
 
-function threetorsimage(C);
+function threetorsimage(C : primesbound := 500);
     cond := &*BadPrimes(C)*2;
     f,h := HyperellipticPolynomials(C);
     defpols := [f,h];
-    possibilities, possiblesubgroups := find3torsimage(cond, defpols);
+    possibilities, possiblesubgroups := find3torsimage(cond, defpols : primesend := primesbound);
     if #possibilities eq 1 then
 	torsimg := ZG[possibilities[1]]`subgroup;
 	torsimglabel := GSpLookupLabel(X,torsimg);
