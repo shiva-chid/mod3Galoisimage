@@ -898,7 +898,7 @@ over the three torsion field, and sampling Frobenius elements up to simultaneous
     P3 := ProjectiveSpace(K,3);
     XX := Scheme(P3,temppols2);
     XXpts := RationalPoints(XX);
-    all_pts := [zeropt];
+    all_pts := [JacK!0];
     count := 0;
     printf "Total count of K-rational points on Kummer surface = %o\n", #XXpts;
     for XXpt in XXpts do
