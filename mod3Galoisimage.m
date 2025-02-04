@@ -896,15 +896,15 @@ over the three torsion field, and sampling Frobenius elements up to simultaneous
     temppols2 := [projec2(temppols1[j]) : j in [1..#temppols1]];
 
     P3 := ProjectiveSpace(K,3);
-    X := Scheme(P3,temppols2);
-    Xpts := RationalPoints(X);
-    all_pts := [];
+    XX := Scheme(P3,temppols2);
+    XXpts := RationalPoints(XX);
+    all_pts := [zeropt];
     count := 0;
-    printf "Total count of K-rational points on Kummer surface = %o\n", #Xpts;
-    for Xpt in Xpts do
-        kumpt := KumK ! Eltseq(Xpt);
-        printf "Kummer pt constructed...";
+    printf "Total count of K-rational points on Kummer surface = %o\n", #XXpts;
+    for XXpt in XXpts do
+        kumpt := KumK ! Eltseq(XXpt);
         if kumpt ne zeropt and 3*kumpt eq zeropt then
+	        printf "Kummer pt constructed...";
             possible_points := Points(JacK, kumpt);
             printf "lifted to Jacobian...";
             count +:= #possible_points;
