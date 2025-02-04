@@ -1,4 +1,5 @@
-function standardgenus2curve(defpols);
+intrinsic standardgenus2curve(defpols::SeqEnum) -> SeqEnum
+{returns coefficients of hyperelliptic polynomial of simplified model}
 //    P<x> := PolynomialRing(RationalField());
     f := defpols[1];
     h := defpols[2];
@@ -8,10 +9,11 @@ function standardgenus2curve(defpols);
     n := #Li;
     Li := Li cat [0 : i in [1..7-n]];
     return Li;
-end function;
+end intrinsic;
 
-function eqns_2PequalsnegativeP(F,defpols);
-
+intrinsic eqns_2PequalsnegativeP(F::Any, defpols :: SeqEnum) -> SeqEnum, SeqEnum
+{Given a field and defining polynomials of a genus 2 curve, return the homogenous and affine polynomials
+in terms of Kummer coordinates, which cut out the image of the 3-torsion points on the Kummer surface.}
     A<k1,k2,k3,k4,f0,f1,f2,f3,f4,f5,f6,alpha,l1,l2,l3,l4> := PolynomialRing(F,16);
 
     Coefficients := standardgenus2curve(defpols);
@@ -250,35 +252,36 @@ f5*f0^2*f6*k2^2*l1+16*f2*f0*f6*k2^2*l2*f3*l1+16*l2^2*f2*f0*f6*k2*k1*f3+16*f2*f0
     end for;
 
     return Pols, Affine_Pols;
-end function;
+end intrinsic;
 
 
-function modifying_goodsexticpoly(f);
+intrinsic modifying_goodsexticpoly(f :: RngUPolElt) -> RngUPolElt, RngIntElt
+{return a suppressed sextic polynomial g(x) and an integer d such that y^2 = dg(x) is isomorphic to the curve y^2=f(x)}
     P<x> := Parent(f);
     if Degree(f) eq 6 then
-	a6 := Coefficient(f,6);
-	d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
-	f := f/a6;
-	f := Evaluate(f,x-Coefficient(f,5)/6);
+        a6 := Coefficient(f,6);
+        d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
+        f := f/a6;
+        f := Evaluate(f,x-Coefficient(f,5)/6);
     elif Degree(f) eq 5 and Evaluate(f,0) eq 0 then
-	f := P ! ((x+1)^6*Evaluate(f,x/(x+1)));
-	a6 := Coefficient(f,6);
-	if a6 ne 0 then
-	    d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
-	    f := f/a6;
-	    f := Evaluate(f,x-Coefficient(f,5)/6);
-	else
-	    return modifying_goodsexticpoly(f);
-	end if;
+        f := P ! ((x+1)^6*Evaluate(f,x/(x+1)));
+        a6 := Coefficient(f,6);
+        if a6 ne 0 then
+            d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
+            f := f/a6;
+            f := Evaluate(f,x-Coefficient(f,5)/6);
+        else
+            return modifying_goodsexticpoly(f);
+        end if;
     else
-	f := P ! (x^6*Evaluate(f,1/x));
-	a6 := Coefficient(f,6);
-	d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
-	f := f/a6;
-	f := Evaluate(f,x-Coefficient(f,5)/6);
+        f := P ! (x^6*Evaluate(f,1/x));
+        a6 := Coefficient(f,6);
+        d := SquareFree(IntegerRing() ! (a6*Denominator(a6)^2));
+        f := f/a6;
+        f := Evaluate(f,x-Coefficient(f,5)/6);
     end if;
     return f, d;
-end function;
+end intrinsic;
 
 
 

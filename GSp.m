@@ -14,15 +14,92 @@ function index(S,f:Project:=func<x|x>,Unique:=false)
     return A;
 end function;
 
-intrinsic GSp(d::RngIntElt, N::RngIntElt) -> GrpMat
-{ The group of symplectic similitudes of degree d over Z/NZ. }
-    require IsPrime(N): "Currently only prime level is supported."; //TODO: support composite levels
-    return sub<GL(d,Integers(N))|Generators(CSp(d,N))>;
-end intrinsic;
-
 intrinsic GSpSize(d::RngIntElt, N::RngIntElt) -> GrpMat
 { The order of the group of symplectic similitudes of degree d over Z/NZ. }
-    return #GSp(d,N); // TODO: compute this directly as a function of d and N
+    //return #GSp(d,N); // TODO: compute this directly as a function of d and N
+    require #PrimeFactors(N) eq 1 : "Currently only prime power level is supported.";
+    p := PrimeFactors(N)[1]; e := Valuation(N,p);
+    dby2 := ExactQuotient(d,2);
+    ans := p^((e-1)*(2*dby2^2+dby2))*EulerPhi(p^e)*p^(dby2^2);
+    for i := 1 to dby2 do
+	ans := ans*(p^(2*i)-1);
+    end for;
+    return ans;
+end intrinsic;
+
+intrinsic Symp(d::RngIntElt, N::RngIntElt) -> GrpMat
+{ The group of symplectic similitudes of degree d over Z/NZ. }
+    require #PrimeFactors(N) eq 1 : "Currently only prime power level is supported.";
+//    require IsPrime(N): "Currently only prime level is supported."; //TODO: support composite levels
+    p := PrimeFactors(N)[1]; e := Valuation(N,p);
+    if e eq 1 then return sub<GL(d,Integers(p))|Generators(Sp(d,p))>; end if;
+    dby2 := ExactQuotient(d,2);
+    idmat := IdentityMatrix(Integers(p^(e-1)),dby2);
+    zeromat := ZeroMatrix(Integers(p^(e-1)),dby2);
+    J := BlockMatrix(2,2,[zeromat,idmat,-idmat,zeromat]);
+    Jstd := StandardAlternatingForm(d,Integers(p^(e-1)));
+    antidiagidmat := Matrix(Integers(p^(e-1)),dby2,dby2,[[((i+j) eq dby2+1) select 1 else 0 : j in [1..dby2]] : i in [1..dby2]]);
+    permmat := GL(d,Integers(p^(e-1))) ! DirectSum(idmat,antidiagidmat);
+    H := Conjugate(Symp(d,p^(e-1)),permmat);
+    gens := Generators(H);
+    assert &and[g*J*Transpose(g) eq J : g in gens];    
+
+    liftsofgens := [];
+    Mdp := MatrixRing(Integers(p),d);
+    idmat := IdentityMatrix(Integers(p^e),dby2);
+    zeromat := ZeroMatrix(Integers(p^e),dby2);
+    J := BlockMatrix(2,2,[zeromat,idmat,-idmat,zeromat]);
+    for x in gens do
+	for y in Mdp do
+	    g := ChangeRing(x,Integers(p^e))+p^(e-1)*ChangeRing(y,Integers(p^e));
+	    if g*J*Transpose(g) eq J then
+		Append(~liftsofgens,g);
+		break;
+	    end if;
+	end for;
+    end for;
+    kernelgens := [];
+    idmat := IdentityMatrix(Integers(p^e),d);
+    zeromat := ZeroMatrix(Integers(p^e),dby2);
+    for i := 1 to dby2 do
+	for j := i to dby2 do
+	    if i eq j then
+		symmat := Matrix(Integers(p^e),dby2,dby2,[<i,j,p^(e-1)>]);
+	    else
+		symmat := Matrix(Integers(p^e),dby2,dby2,[<i,j,p^(e-1)>, <j,i,p^(e-1)>]);
+	    end if;
+	    uppermat := idmat + BlockMatrix(2,2,[zeromat,symmat,zeromat,zeromat]);
+	    lowermat := idmat + BlockMatrix(2,2,[zeromat,zeromat,symmat,zeromat]);
+	    Append(~kernelgens,uppermat);
+	    Append(~kernelgens,lowermat);
+	end for;
+    end for;
+    for i := 1 to dby2 do
+	for j := 1 to dby2 do
+	    elmtmat := Matrix(Integers(p^e),dby2,dby2,[<i,j,p^(e-1)>]);
+	    Append(~kernelgens,idmat+BlockMatrix(2,2,[elmtmat,zeromat,zeromat,-Transpose(elmtmat)]));
+	end for;
+    end for;
+    G := sub<GL(d,Integers(p^e))|liftsofgens cat kernelgens>;
+    assert #G*EulerPhi(N) eq GSpSize(d,N);
+    permmat := GL(d,Integers(p^e)) ! ChangeRing(permmat,Integers(p^e));
+    G := Conjugate(G,permmat);
+    Jstd := StandardAlternatingForm(d,Integers(p^e));
+    assert &and[g*Jstd*Transpose(g) eq Jstd : g in Generators(G)];
+    return G;
+end intrinsic;
+
+intrinsic GSp(d::RngIntElt, N::RngIntElt) -> GrpMat
+{ The group of symplectic similitudes of degree d over Z/NZ. }
+    require #PrimeFactors(N) eq 1 : "Currently only prime power level is supported.";
+//    require IsPrime(N): "Currently only prime level is supported."; //TODO: support composite levels
+    p := PrimeFactors(N)[1]; e := Valuation(N,p);
+    if e eq 1 then return sub<GL(d,Integers(p))|Generators(CSp(d,p))>; end if;
+    H := Symp(d,N);
+    a := PrimitiveRoot(N);
+    idmat := IdentityMatrix(Integers(N),ExactQuotient(d,2));
+    mat := GL(d,Integers(N)) ! DirectSum(idmat,a*idmat);
+    return sub<GL(d,Integers(N))|Generators(H) join {mat}>;
 end intrinsic;
 
 intrinsic GSpLevel(H::GrpMat) -> RngIntElt, GrpMat
@@ -33,7 +110,7 @@ intrinsic GSpLevel(H::GrpMat) -> RngIntElt, GrpMat
     if cH eq cGSp then return 1,sub<GL(d,ZZ)|>; end if;
     if IsPrime(N) then return N,H; end if;
     for p in PrimeDivisors(N) do
-        while N gt p and N mod p eq 0 and cGSp*#ChangeRing(H,Integers(N div p)) eq GSpSize(N div p)*cH do N div:= p; end while;
+        while N gt p and N mod p eq 0 and cGSp*#ChangeRing(H,Integers(N div p)) eq GSpSize(d,N div p)*cH do N div:= p; end while;
     end for;
     return N,ChangeRing(H,Integers(N));
 end intrinsic;
@@ -58,17 +135,29 @@ intrinsic GLProject(H::GrpMat,M::RngIntElt) -> GrpMat
     return ChangeRing(GLLift(H,LCM(M,N)),Integers(M));
 end intrinsic;
 
+intrinsic GSpLift(H::GrpMat,M::RngIntElt) -> GrpMat
+{ The full preimage in GSp(n,Z/MZ) of H in GSp(n,Z/NZ) for a multiple M of N. }
+    R := BaseRing(H);  if not IsFinite(R) and #H eq 1 then return GSp(Degree(H),M); end if;
+    require Type(R) eq RngIntRes: "H must be a sugroup of GSp(n,Z/NZ) for some positive integer N.";
+    N := #R;
+    require IsDivisibleBy(M,N): "M must be divisible by N for H in GL(n,Z/NZ)";
+    GSpn:=GSp(Degree(H),M);
+    _,pi:=ChangeRing(GSpn,R);
+    return sub<GSpn|Kernel(pi),H @@ pi>; // Note: H @@ pi does not compute the full preimage!
+end intrinsic;
+
 intrinsic GSpProject(H::GrpMat,M::RngIntElt) -> RngIntElt
 { The index of H in GSp. }
     R := BaseRing(H);  if not IsFinite(R) and #H eq 1 then return GSp(Degree(H),M); end if;
-    require Type(R) eq RngIntRes: "H must be a sugroup of GL(n,Z/NZ) for some positive integer N.";
+    require Type(R) eq RngIntRes: "H must be a sugroup of GSp(n,Z/NZ) for some positive integer N.";
     N := #R; if N eq M then return H; end if;
-    error "Unimplemented";
+    if IsDivisibleBy(N,M) then return sub<GSp(Degree(H),M) | ChangeRing(H,Integers(M))>; end if;
+    return sub<GSp(Degree(H),M) | ChangeRing(GSpLift(H,LCM(M,N)),Integers(M))>;
 end intrinsic;
 
 intrinsic GSpIndex(H::GrpMat) -> RngIntElt
 { The index of H in GSp. }
-    return IsFinite(BaseRing(H)) select Index(GSp(Degree(H),#BaseRing(H)),H) else 1;
+    return IsFinite(BaseRing(H)) select GSpSize(Degree(H),#BaseRing(H)) div #H else 1;
 end intrinsic;
 
 intrinsic GLDeterminantImage(H::GrpMat) -> GrpMat
@@ -89,27 +178,38 @@ intrinsic GLTranspose(H::GrpMat) -> GrpMat
 end intrinsic;
 
 intrinsic GLOrbitSignature(H::GrpMat:N:=0) -> SeqEnum[SeqEnum[RngIntElt]]
-{ The orbit signature of H (the ordered list of triples [e,s,m] where m is the number of non-trivial left H-orbits of V of size s and exponent e). }
+{ The orbit signature of H (the ordered list of triples [e,s,m] where m is the number of non-trivial right H-orbits of V of size s and exponent e). }
     if N eq 0 then N,H := GSpLevel(H); else require N eq 1 or #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H"; end if;
     if N eq 1 then return [Universe([[1]])|]; end if;
-    H := GLTranspose(H);
     D := Divisors(N);
     function ord(v) return Min([n:n in D|n*v eq 0*v]); end function;
     return lmset({*[ord(o[1]),#o]:o in Orbits(H)|o ne {RSpace(H)!0}*});
 end intrinsic;
 
 intrinsic GSpSimilitudeCharacter(A::GrpMatElt) -> RngIntResElt
-{ Given a matrix A in GSp(2g,Z/NZ) returns a such that Transpose(A)*J*A = a*J, where J is the symplectic form on Sp(2g,Z/NZ). }
-    b,J := SymplecticForm(Sp(Degree(A),#BaseRing(A))); assert b;
+{ Given a matrix A in GSp(2g,Z/NZ) returns a such that A*J*Transpose(A) = a*J, where J is the symplectic form on Sp(2g,Z/NZ). }
+    J := StandardAlternatingForm(Degree(A),BaseRing(A));
     M := Parent(J); A := M!A;
     B := Transpose(A)*J*A;
     return [a:a in BaseRing(A)|B eq a*J][1];
 end intrinsic;
 
+intrinsic GSpSimilitudeImage(H::GrpMat) -> GrpMat
+{ Similitude of H as a subgroup of GL1. }
+    R := BaseRing(H);  if not IsFinite(R) and #H eq 1 then return sub<GL(1,ZZ)|>; end if;
+    return sub<GL(1,R)|[[GSpSimilitudeCharacter(h)]:h in Generators(H)]>;
+end intrinsic;
+
+intrinsic GSpSimilitudeIndex(H::GrpMat) -> RngIntElt
+{ The index of similitude of H in GL1. }
+    R := BaseRing(H);  if not IsFinite(R) and #H eq 1 then return 1; end if;
+    return Index(GL(1,R),GSpSimilitudeImage(H));
+end intrinsic;
+
 function csig(c) return [c[1]] cat [ZZ|f:f in Coefficients(CharacteristicPolynomial(c[3]))] cat [ZZ|GSpSimilitudeCharacter(c[3]),c[2]]; end function;
 
 intrinsic GSpClassSignature(H::GrpMat:N:=0) -> SeqEnum[Tup]
-{ The class signature of H (the ordered list of 5-tuples (o,d,t,s,m) where m is the number of conjugacy classes of elements of H of size s, order o, determinant d, trace t). }
+{ The class signature of H (the ordered list of 5-tuples (o,a,d,s,m) where m is the number of conjugacy classes of elements of H of size s, order o, similitude d, and coefficients of characteristic polynomial a). }
     if N eq 0 then N,H := GSpLevel(H); else require N eq 1 or #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H"; end if;
     if N eq 1 then return []; end if;
     C := ConjugacyClasses(H);
@@ -117,8 +217,91 @@ intrinsic GSpClassSignature(H::GrpMat:N:=0) -> SeqEnum[Tup]
     return lmset(S);
 end intrinsic;
 
+intrinsic GSpCharpolsDistribution(H::GrpMat:N:=0) -> SeqEnum[Tup]
+{ The distribution of characteristic polynomials of elements in H. }
+//    if N eq 0 then N,H := GSpLevel(H); else require N eq 1 or #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H"; end if;
+//    if N eq 1 then return []; end if;
+    if N eq 0 then N := #BaseRing(H); end if;
+    ordH := #H;
+    C := ConjugacyClasses(H);
+    charpols := [];
+    freqs := [];
+    for c in C do
+        coeffs := Coefficients(CharacteristicPolynomial(c[3]));
+        if coeffs in charpols then
+            ii := Index(charpols,coeffs);
+            freqs[ii] +:= c[2];
+        else
+            Append(~charpols,coeffs);
+            Append(~freqs,c[2]);
+        end if;
+    end for;
+    charpoldist := {<charpols[i],freqs[i]/ordH> : i in [1..#charpols]};
+    return charpoldist;
+end intrinsic;
+
+/*
+intrinsic GSpConjugacyClassCanonicalRepresentative(g::GrpMatElt:N:=0) -> GrpMatElt
+{returns a canonical representative of the GSp-conjugacy class of g. It is the
+smallest element in lexicographical ordering}
+
+end intrinsic;
+*/
+
+intrinsic GSpGassmannDistribution(H::GrpMat:N:=0,CCs:=[],phi:=map<{1}->{1}|x:->1>) -> SeqEnum[Tup]
+{ The distribution of GSp-conjugacy classes of elements in H. }
+//    if N eq 0 then N,H := GSpLevel(H); else require N eq 1 or #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H"; end if;
+//    if N eq 1 then return []; end if;
+    if N eq 0 then N := #BaseRing(H); end if;
+    d := Degree(H);
+    G := GSp(d,N);
+    if CCs eq [] then CCs := ConjugacyClasses(G); phi := ClassMap(G); end if;
+    ordH := #H;
+    C := ConjugacyClasses(H);
+    ccsdist := [<x[3],0> : x in CCs];
+    for c in C do
+/*
+        for ii in [1..#CCs] do
+            if IsConjugate(G,c[3],CCs[ii][3]) then
+                oldorder := ccsdist[ii][2];
+                ccsdist[ii] := <ccsdist[ii][1],oldorder+c[2]>;
+                break;
+            end if;
+        end for;
+*/
+        ii := phi(c[3]);
+        oldorder := ccsdist[ii][2];
+        ccsdist[ii] := <ccsdist[ii][1],oldorder+c[2]>;
+    end for;
+    ccsdist := [<ccsdist[i][1],ccsdist[i][2]/ordH> : i in [1..#ccsdist]];
+    return ccsdist;
+end intrinsic;
+
+intrinsic GSpConjugacyClasses(d::RngIntElt, N::RngIntElt) -> SeqEnum[Tup]
+{ An ordered sequence of tuples <order,length,rep> giving the conjugacy classes of GL(2,Integers(N)). }
+// TODO
+    if N eq 1 then return [<1,1,GL(4,Integers())!IdentityMatrix(4,Integers())>]; end if;
+    require IsPrime(N) : "Currently only prime level is supported.";
+    p := N;
+    G := GSp(d,N);
+    CCs := ConjugacyClasses(G);
+    return [ <r[1],r[2],r[3],GSpSimilitudeCharacter(r[3])>:r in CCs];
+end intrinsic;
+
+intrinsic GSpGassmannSignature(H::GrpMat:N:=0) -> SeqEnum[Tup]
+{ Sorted list of pairs <r,m> where r is a similarity invariant of GL_2(N) and m > 0 is its multiplicity in H; this uniquely identifies the Gassmann equivalence class of H as a subgroup of GL_2(N). }
+    if N eq 0 then N,H := GL2Level(H); else require N eq 1 or #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H"; end if;
+    if N eq 1 then return []; end if;
+    S := GL2SimilarityMultiset(H);
+    return Sort([<r,Multiplicity(S,r)>:r in Set(S)]);
+end intrinsic;
+
+
 intrinsic GSpCanonicalize(G::GrpMat,H::GrpMat:Verbose:=false) -> SeqEnum[GrpMat]
-{ Computes a canonical set of generators for a conjugate of a subgroup H of GSp (the returned list generates a conjugate of H and depends only on the conjugacy class of H, not H iteslef itself). }
+{ Computes a canonical set of generators for a conjugate of a subgroup H of GSp (the returned list generates a conjugate of H and depends only on the conjugacy class of H, not H itself). }
+//modified_Shiva
+    if G eq GSp(Degree(G),#BaseRing(G)) then G := GSpLift(sub<GL(Degree(G),ZZ)|>,#BaseRing(H)); end if;
+    if #BaseRing(G) lt #BaseRing(H) then G := GSpLift(G,#BaseRing(H)); end if;
     if not H subset G then b,g := IsConjugateSubgroup(GSp(Degree(H),#BaseRing(H)),G,H); assert b; H := H^g; assert H subset G; end if;
     M := #G;
     if Verbose then cnt := M div #Normalizer(G,H); printf "Canonicalizing subgroup of size %o and index %o with %o conjugates\n", #H, M div #H, cnt; s := Cputime(); end if;
@@ -169,7 +352,7 @@ intrinsic GSpCompareLabels(a::MonStgElt,b::MonStgElt) -> RngIntElt
 end intrinsic;
 
 intrinsic GSpSortLabels(L::SeqEnum[MonStgElt]) -> SeqEnum[MonStgElt]
-{ Sorts the specified list of labels of subgroups of GSp(2,Zhat). }
+{ Sorts the specified list of labels of subgroups of GSp(d,Zhat). }
     L := Sort(L,func<a,b|GSpCompareLabels(a,b)>);
     return L;
 end intrinsic;
@@ -200,25 +383,36 @@ gspnode := recformat<
     label:MonStgElt,
     level:RngIntElt,
     index:RngIntElt,
-    genus:RngIntElt,
-    dlabel:MonStgElt,
-    zlabel:MonStgElt,
     orbits:SeqEnum,
     children:SeqEnum,
     parents:SeqEnum,
     subgroup:GrpMat>;
 
-intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=true, IndexDivides:=false) -> Assoc
-{ Lattice of subgroups of GSp(d,p) of index bounded by IndexLimit.  Returns a list of records with attributes label, level, index, orbits, children, parents, subgroup, where children and parents are indices into this list that identify maximal subgroups and minimal supergroups. }
+intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=true, IndexDivides:=false, excludepgroups:=1) -> Assoc
+{ Lattice of subgroups of GSp(d,N) of index bounded by IndexLimit.  Returns a list of records with attributes label, level, index, orbits, children, parents, subgroup, where children and parents are indices into this list that identify maximal subgroups and minimal supergroups. }
     require d ge 2 and IsEven(d): "Degree must be a positive even integer";
     require N gt 1: "Level must be an integer greater than 1";
     G := GSp(d,N);
     if IndexLimit eq 0 then IndexLimit := #G; end if;
     O := IndexDivides select ExactQuotient(#G,IndexLimit) else 1;
-    if Verbose then printf "Enumerating subgroups of GSp(%o,Z/%oZ) of index %o %o with maximal determinant...", d, N, IndexDivides select "dividing" else "at most", IndexLimit; s := Cputime(); end if;
-    di := GLDeterminantIndex(G);
-    filter := func<H|GLDeterminantIndex(H) eq di>;
-    S := [H`subgroup: H in Subgroups(G : IndexLimit:=IndexLimit, OrderMultipleOf:=O) | filter(H`subgroup)];
+    if excludepgroups ne 1 then
+	require IsPrime(excludepgroups) : "Currently only p-groups for prime p can be excluded";
+	p := excludepgroups;
+	if Verbose then printf "Enumerating subgroups of GSp(%o,Z/%oZ) of index %o %o that are not %o-groups and that have maximal similitude...", d, N, IndexDivides select "dividing" else "at most", IndexLimit, p; s := Cputime(); end if;
+	di := GSpSimilitudeIndex(G);
+	filter := func<H|GSpSimilitudeIndex(H) eq di>;
+	if not PrimeFactors(O) in {[],[p]} then
+	    S := [H`subgroup: H in Subgroups(G : IndexLimit:=IndexLimit, OrderMultipleOf:=O) | filter(H`subgroup)];
+	else
+	    divs := [d : d in Divisors(#G div O) | IndexLimit*O*d gt #G and not PrimeFactors(d) in {[],[p]}];
+	    S := &cat[[H`subgroup : H in Subgroups(G : OrderEqual:=O*d) | filter(H`subgroup)] : d in divs];
+	end if;
+    else
+	if Verbose then printf "Enumerating subgroups of GSp(%o,Z/%oZ) of index %o %o with maximal similitude...", d, N, IndexDivides select "dividing" else "at most", IndexLimit; s := Cputime(); end if;
+	di := GSpSimilitudeIndex(G);
+	filter := func<H|GSpSimilitudeIndex(H) eq di>;
+	S := [H`subgroup: H in Subgroups(G : IndexLimit:=IndexLimit, OrderMultipleOf:=O) | filter(H`subgroup)];
+    end if;
     if Verbose then
         printf "found %o subgroups in %.3os\n", #S, Cputime()-s;
         printf "Computing level, index, orbit signature, and class signature for %o groups...", #S; s := Cputime();
@@ -229,7 +423,11 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
     M := {};
     for i:= 1 to #T do
         if 2*T[i][2] gt IndexLimit then continue; end if;
-        m := [H`subgroup:H in MaximalSubgroups(S[i] : IndexLimit:=IndexLimit div T[i][2], OrderMultipleOf:=O) | filter(H`subgroup)];
+	if excludepgroups eq 1 then
+	    m := [H`subgroup:H in MaximalSubgroups(S[i] : IndexLimit:=IndexLimit div T[i][2], OrderMultipleOf:=O) | filter(H`subgroup)];
+	else
+	    m := [H`subgroup:H in MaximalSubgroups(S[i] : IndexLimit:=IndexLimit div T[i][2], OrderMultipleOf:=O) | filter(H`subgroup) and not PrimeFactors(H`order) in {[],[excludepgroups]}];
+	end if;
         for H in m do
             level,K := GSpLevel(H);
             J := X[<level,GSpIndex(K),GLOrbitSignature(K:N:=level)>]; j := 1;
@@ -251,6 +449,8 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
     X := index([1..#T],func<i|<T[i][1],T[i][2]>>);
     L := ["" : i in [1..#T]];
     Lsups := [[] : i in [1..#T]];
+//modified_Shiva
+    G := GSp(d,N);
     B := [false:i in [1..#T]];  assert S[#S] eq G; B[#S] := true;
     if Verbose then printf "Labeling %o subgroups\n", #S; s := Cputime(); end if;
     cmpkeys := function(a,b)
@@ -274,7 +474,7 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
                     j := IL[r[1][#r[1]]];
                     if not B[j] then
                         J := []; i := j; repeat J := [i] cat J; i := IL[Lsups[i][#Lsups[i]]]; until B[i]; J := [i] cat J;
-                        for i:=2 to #J do S[J[i]] := sub<G|GSpCanonicalize(S[J[i-1]],S[J[i]]:Verbose:=Verbose)>; B[J[i]] := true; end for;
+                        for i:=2 to #J do S[J[i]] := sub<GSp(d,#BaseRing(S[J[i]]))|GSpCanonicalize(S[J[i-1]],S[J[i]]:Verbose:=Verbose)>; B[J[i]] := true; end for;
                     end if;
                     A := [GSpCanonicalize(S[j],S[i]:Verbose:=Verbose):i in Y[r]];
                     for i:=1 to #A do S[Y[r][i]] := sub<G|A[i]>; B[i] := true; end for;
@@ -290,7 +490,7 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
     if Verbose then printf "Labeling took %.3os\nMinimizing generators for %o groups...", Cputime()-s, #L; s:=Cputime(); end if;
     X := AssociativeArray();
     for i:=1 to #L do
-        H := T[i][1] eq 1 select sub<GL(2,ZZ)|> else GLMinimizeGenerators(S[i]);
+        H := T[i][1] eq 1 select sub<GL(d,ZZ)|> else GLMinimizeGenerators(S[i]);
         X[L[i]]:= rec<gspnode|label:=L[i],level:=T[i][1],index:=T[i][2],orbits:=T[i][3],children:=Lsubs[i],parents:=Lsups[i],subgroup:=H>;
     end for;
     if Verbose then printf "%.3os\n", Cputime()-s; end if;
@@ -298,7 +498,7 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
 end intrinsic;
 
 intrinsic GSpLookupLabel(X::Assoc, H::GrpMat : NotFound:="?") -> MonStgElt
-{ The label of the specified subgroup of GSp(2,Z/NZ) if it is present in the specified subgroup lattice (up to conjugacy). }
+{ The label of the specified subgroup of GSp(d,Z/NZ) if it is present in the specified subgroup lattice (up to conjugacy). }
     if Type(BaseRing(H)) eq FldFin and IsPrime(#BaseRing(H)) then H := ChangeRing(H,Integers(#BaseRing(H))); end if;
     N,H := GSpLevel(H);
     if N eq 1 then return "1.1.1"; end if;
