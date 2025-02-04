@@ -89,18 +89,19 @@ and a random point is chosen}
         // printf "Point on twisted Burkhardt model = %o\n", alp;
     end if;
     boo := false;
-    printf "Trying the point(s): ";
+    // printf "Trying the point(s): ";
     for alp in BB_pts do
         try
-//            printf "%o ", alp;
+            // printf "%o ", alp;
             Palps := [F];
             for i := 2 to 4 do
                 Append(~Palps,&+[alp[j]*Derivative(Palps[i-1],j) : j in [1..5]]);
             end for;
             C := Curve(PP4,Palps[2..4]);
             boo := true;
+            break;
         catch e;
-            printf "%o\n%o\n%o\n%o\n", e`Object, e`Position, e`Traceback, e`Type;
+            // printf "%o\n", e`Object;
             continue;
         end try;
     end for;
