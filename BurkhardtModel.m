@@ -77,15 +77,16 @@ and a random point is chosen}
     P5y<[Y]> := Parent(F);
     PP4 := ProjectiveSpace(P5y);
     BB := Scheme(PP4,F);
-    printf "Formed the twisted Burkhardt model\n";
+    // printf "Formed the twisted Burkhardt model\n";
 
     if P3pt eq [] then
         BB_pts := [Eltseq(x) : x in PointSearch(BB,ht : Dimension := 3, SkipSingularityCheck := true)];
         require #BB_pts ne 0 : "Point search upto height ", ht, " returned no points. Increase height.";
-        printf "PointSearch found %o points on twisted Burkhardt model\n", #BB_pts;
+        // printf "PointSearch found %o points on twisted Burkhardt model\n", #BB_pts;
     else
         alp := [Evaluate(fi,P3pt) : fi in MtoB];
         BB_pts := [alp];
+        // printf "Point on twisted Burkhardt model = %o\n", alp;
     end if;
     boo := false;
     printf "Trying the point(s): ";
@@ -104,9 +105,9 @@ and a random point is chosen}
         end try;
     end for;
     require boo : "No good points of height < ", ht, ". Increase height.";
-    printf "The intersection of the three polars is a degree %o curve C in P^4. Is it irreducible? %o\n", Degree(C), IsIrreducible(C);
+    // printf "The intersection of the three polars is a degree %o curve C in P^4. Is it irreducible? %o\n", Degree(C), IsIrreducible(C);
     irrcomps_C := IrreducibleComponents(C);
-    printf "C has %o irreducible components, with genus \n%o\n and degree \n%o\n", #irrcomps_C, [Genus(Curve(x)) : x in irrcomps_C], [Degree(x) : x in irrcomps_C];
+    // printf "C has %o irreducible components, with genus \n%o\n and degree \n%o\n", #irrcomps_C, [Genus(Curve(x)) : x in irrcomps_C], [Degree(x) : x in irrcomps_C];
     assert exists(PP){x : x in irrcomps_C | Degree(x) eq 1};
     // assert Genus(Curve(PP)) eq 0;
     // assert exists(deg5PP){x : x in irrcomps_C | Degree(x) eq 5};
