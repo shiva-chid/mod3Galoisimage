@@ -22,10 +22,10 @@ for g in GL(3,2) do
     end try;
 end for;
 
-time Cnew := Genus2CurveFromBurkhardtTwistPoint(F,MtoB : P3pt := [1,-1,0,1]); Cnew;
+time Cnew := Genus2CurveFromBurkhardtTwistPoint(F,MtoB : P3pt := [1,-1,1,2]);
+time Cnew := IntegralModel(Cnew); Cnew;
 imglbl, img, X := mod3Galoisimage(Cnew);
 if imglbl ne lbl then
-    time Cnew := IntegralModel(Cnew);
     time Cnew := CorrectTwist(Cnew,K,tau,rho); Cnew;
     imglbl, img, X := mod3Galoisimage(Cnew);
     assert imglbl eq lbl;
