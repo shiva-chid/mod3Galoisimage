@@ -572,7 +572,7 @@ on the maximum number of three-torsion points over small degree number fields.}
     elif #poss eq 2 then
 		n := final_test(poss);
 		if (n eq -1) or (n eq 6) or (n eq 8 and ZG[poss[1][1]]`order eq 32) then
-			idGal := projmod3Galoisimage(defpols,ZG[poss[1][1]]`order/2);
+			idGal := projmod3Galoisimage(defpols,ExactQuotient(ZG[poss[1][1]]`order,2));
 			minusone := Center(G).1;
 			for i := 1 to #poss do
 				if IdentifyGroup(quo<ZG[poss[i][1]]`subgroup|minusone>) eq idGal then
