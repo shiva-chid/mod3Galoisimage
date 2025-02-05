@@ -16,8 +16,14 @@ for i := 1 to #ZG do
     end for;
 end for;
 
+Z3 := Integers(3);
+J := Matrix(Z3,2,2,[0,1,1,0]);
+zeromat := ZeroMatrix(Z3,2);
+JJ := BlockMatrix(2,2,[zeromat,J,-J,zeromat]);
+JJF3 := ChangeRing(JJ,GF(3));
 U, incl := UnitGroup(GF(3));
-chi := hom<G -> U | [Identity(U),Identity(U),U.1]>;
+// chi := hom<G -> U | [Identity(U),Identity(U),U.1]>;
+chi := hom<G -> U | [(g*JJF3*Transpose(g) eq JJF3) select Identity(U) else U.1 : g in GeneratorsSequence(G)]>;
 sigs := [];
 CCG := ConjugacyClasses(G);
 for i := 1 to #CCG do
@@ -400,6 +406,54 @@ if the mod3-Galois image is H. If normal is true, only normal degree n fields ar
 		return max_pts;
     end if;
 end intrinsic;
+
+intrinsic fixedspaces(H :: GrpMat, n :: RngIntElt : normal := false) -> RngIntElt
+{returns a multiset consisting of 0,1,2,3,4. For each 0 <= k <= 4, the number of occurences of k
+denotes the number of degree n fields F such that three-torsion over F is a k-dimensional space.
+H is the the mod3-Galois image. If normal is true, only normal degree n fields are considered.}
+    MH := GModule(H);
+	ordH := #H;
+    if normal then
+	    ZH := NormalSubgroups(H : OrderEqual := ExactQuotient(ordH,n));
+		ZH := [x`subgroup : x in ZH];
+    else
+	    ZH := Subgroups(H : OrderEqual := ExactQuotient(ordH,n));
+		ZH := &cat[Setseq(Conjugates(H,x`subgroup)) : x in ZH];
+    end if;
+	dat := {* Dimension(FixMod(MH,xsub)) : xsub in ZH *};
+	return dat;
+end intrinsic;
+
+intrinsic twodimfixedspaces(H :: GrpMat, n :: RngIntElt : normal := false) -> RngIntElt
+{returns a multiset consisting of 0s and 1s. The number of 0s denotes the number of degree n fields F
+such that three-torsion over F is an isotropic 2-dimensional space. The number of 1s denotes the number
+of such F with three-torsion over F being a non-degenerate 2-dimensional space.
+H is the the mod3-Galois image. If normal is true, only normal degree n fields are considered.}
+    MH := GModule(H);
+	ordH := #H;
+	dat := {* *};
+    if normal then
+	    ZH := NormalSubgroups(H : OrderEqual := ExactQuotient(ordH,n));
+		ZH := [x`subgroup : x in ZH];
+    else
+	    ZH := Subgroups(H : OrderEqual := ExactQuotient(ordH,n));
+		ZH := &cat[Setseq(Conjugates(H,x`subgroup)) : x in ZH];
+    end if;
+	for xsub in ZH do
+		W, incl := FixMod(MH,xsub);
+		if Dimension(W) ne 2 then continue; end if;
+		w1mat := Matrix(Z3,1,4,Eltseq(incl(W.1)));
+		w2mat := Matrix(Z3,1,4,Eltseq(incl(W.2)));
+		// printf "%o, %o, %o\n", W, w1mat, w2mat;
+		if w1mat*JJ*Transpose(w2mat) eq 0 then
+			Include(~dat,0);
+		else
+			Include(~dat,1);
+		end if;
+	end for;
+	return dat;
+end intrinsic;
+
 
 function final_test(poss);
     if #poss eq 3 then

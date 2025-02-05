@@ -22,7 +22,7 @@ for g in GL(3,2) do
     end try;
 end for;
 
-time Cnew := Genus2CurveFromBurkhardtTwistPoint(F,MtoB : P3pt := [1,-1,1,2]);
+time Cnew := Genus2CurveFromBurkhardtTwistPoint(F,MtoB : P3pt := [1,-1,1,2]); // the point can be varied.
 time Cnew := IntegralModel(Cnew); Cnew;
 imglbl, img, X := mod3Galoisimage(Cnew);
 if imglbl ne lbl then
