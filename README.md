@@ -9,5 +9,6 @@ level (which will be 3 for all proper subgroups of GSp(4,3)), and i is the index
 positive integer which distinguishes the conjugacy classes of subgroups of the same level and index. It is computed
 deterministically using the subgroup lattice structure, orbit signature for the natural action on F_3^4, conjugacy class
 signature and if necessary, by lexicographical ordering of canonicalized generators. This labelling is due to Drew Sutherland.
+The label of a subgroup H can be obtained by calling GSpLookupLabel(X,H);
 
 For an example implementation, see the file example.m
