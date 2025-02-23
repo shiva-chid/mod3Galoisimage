@@ -16,7 +16,6 @@ end function;
 
 intrinsic GSpSize(d::RngIntElt, N::RngIntElt) -> GrpMat
 { The order of the group of symplectic similitudes of degree d over Z/NZ. }
-    //return #GSp(d,N); // TODO: compute this directly as a function of d and N
     require #PrimeFactors(N) eq 1 : "Currently only prime power level is supported.";
     p := PrimeFactors(N)[1]; e := Valuation(N,p);
     dby2 := ExactQuotient(d,2);
@@ -30,7 +29,6 @@ end intrinsic;
 intrinsic Symp(d::RngIntElt, N::RngIntElt) -> GrpMat
 { The group of symplectic similitudes of degree d over Z/NZ. }
     require #PrimeFactors(N) eq 1 : "Currently only prime power level is supported.";
-//    require IsPrime(N): "Currently only prime level is supported."; //TODO: support composite levels
     p := PrimeFactors(N)[1]; e := Valuation(N,p);
     if e eq 1 then return sub<GL(d,Integers(p))|Generators(Sp(d,p))>; end if;
     dby2 := ExactQuotient(d,2);
@@ -92,7 +90,6 @@ end intrinsic;
 intrinsic GSp(d::RngIntElt, N::RngIntElt) -> GrpMat
 { The group of symplectic similitudes of degree d over Z/NZ. }
     require #PrimeFactors(N) eq 1 : "Currently only prime power level is supported.";
-//    require IsPrime(N): "Currently only prime level is supported."; //TODO: support composite levels
     p := PrimeFactors(N)[1]; e := Valuation(N,p);
     if e eq 1 then return sub<GL(d,Integers(p))|Generators(CSp(d,p))>; end if;
     H := Symp(d,N);
@@ -290,7 +287,7 @@ end intrinsic;
 
 intrinsic GSpGassmannSignature(H::GrpMat:N:=0) -> SeqEnum[Tup]
 { Sorted list of pairs <r,m> where r is a similarity invariant of GL_2(N) and m > 0 is its multiplicity in H; this uniquely identifies the Gassmann equivalence class of H as a subgroup of GL_2(N). }
-    if N eq 0 then N,H := GL2Level(H); else require N eq 1 or #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H"; end if;
+    if N eq 0 then N,H := GSpLevel(H); else require N eq 1 or #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H"; end if;
     if N eq 1 then return []; end if;
     S := GL2SimilarityMultiset(H);
     return Sort([<r,Multiplicity(S,r)>:r in Set(S)]);
@@ -299,7 +296,6 @@ end intrinsic;
 
 intrinsic GSpCanonicalize(G::GrpMat,H::GrpMat:Verbose:=false) -> SeqEnum[GrpMat]
 { Computes a canonical set of generators for a conjugate of a subgroup H of GSp (the returned list generates a conjugate of H and depends only on the conjugacy class of H, not H itself). }
-//modified_Shiva
     if G eq GSp(Degree(G),#BaseRing(G)) then G := GSpLift(sub<GL(Degree(G),ZZ)|>,#BaseRing(H)); end if;
     if #BaseRing(G) lt #BaseRing(H) then G := GSpLift(G,#BaseRing(H)); end if;
     if not H subset G then b,g := IsConjugateSubgroup(GSp(Degree(H),#BaseRing(H)),G,H); assert b; H := H^g; assert H subset G; end if;
@@ -389,7 +385,7 @@ gspnode := recformat<
     subgroup:GrpMat>;
 
 intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=true, IndexDivides:=false, excludepgroups:=1) -> Assoc
-{ Lattice of subgroups of GSp(d,N) of index bounded by IndexLimit.  Returns a list of records with attributes label, level, index, orbits, children, parents, subgroup, where children and parents are indices into this list that identify maximal subgroups and minimal supergroups. }
+{ Lattice of subgroups of GSp(d,N) with surjective similitude character and index bounded by IndexLimit. Returns a list of records with attributes label, level, index, orbits, children, parents, subgroup where children and parents are lists of labels that identify maximal subgroups and minimal supergroups. }
     require d ge 2 and IsEven(d): "Degree must be a positive even integer";
     require N gt 1: "Level must be an integer greater than 1";
     G := GSp(d,N);
@@ -449,7 +445,6 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
     X := index([1..#T],func<i|<T[i][1],T[i][2]>>);
     L := ["" : i in [1..#T]];
     Lsups := [[] : i in [1..#T]];
-//modified_Shiva
     G := GSp(d,N);
     B := [false:i in [1..#T]];  assert S[#S] eq G; B[#S] := true;
     if Verbose then printf "Labeling %o subgroups\n", #S; s := Cputime(); end if;
