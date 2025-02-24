@@ -35,6 +35,7 @@ for i := 1 to #CCG do
 end for;
 
 function sigstat(H);
+// returns signature distribution of H. The signature of a matrix is the tuple <similitude, trace, dimension of fixed subspace>
     sigstatH := [0/1 : i in [1..#sigs]];
     CCH := ConjugacyClasses(H);
     for i := 1 to #CCH do
@@ -81,6 +82,7 @@ for i := #possible_subs to 1 by -1 do
 end for;
 
 function mindist_nthsigstat(n);
+// returns the minimum Euclidean distance of the nth signature distribution from other signature distributions
     V := VectorSpace(RealField(),18);
     mindist := 1;
     for j := 1 to #all_sigstats do
@@ -455,52 +457,21 @@ H is the the mod3-Galois image. If normal is true, only normal degree n fields a
 end intrinsic;
 
 
-function final_test(poss);
-    if #poss eq 3 then
-		ii := poss[1][1];
-		jj := poss[2][1];
-		kk := poss[3][1];
-		H1 := ZG[ii]`subgroup;
-		H2 := ZG[jj]`subgroup;
-		H3 := ZG[kk]`subgroup;
-		for n := 1 to Maximum([#H1,#H2,#H3]) do
-			tempset := {max_pts_over_ext(H1,n),max_pts_over_ext(H2,n),max_pts_over_ext(H3,n)};
-			if #tempset eq 3 then
-				return n;
-			end if;
-		end for;
-		return -3;
-    elif #poss eq 4 then
-		ii := poss[1][1];
-		jj := poss[2][1];
-		kk := poss[3][1];
-		ll := poss[4][1];
-		H1 := ZG[ii]`subgroup;
-		H2 := ZG[jj]`subgroup;
-		H3 := ZG[kk]`subgroup;
-		H4 := ZG[ll]`subgroup;
-		for n := 1 to Maximum([#H1,#H2,#H3,#H4]) do
-			tempset := {max_pts_over_ext(H1,n),max_pts_over_ext(H2,n),max_pts_over_ext(H3,n),max_pts_over_ext(H4,n)};
-			if #tempset eq 4 then
-				return n;
-			end if;
-		end for;
-		return -4;
-    end if;
-    ii := poss[1][1];
-    jj := poss[2][1];
-    H1 := ZG[ii]`subgroup;
-    H2 := ZG[jj]`subgroup;
-    for n := 1 to Maximum(#H1,#H2) do
-		if max_pts_over_ext(H1,n) ne max_pts_over_ext(H2,n) then
+function whatindexsubgroupdistinguishes(poss);
+// given a sequence containing a full set of Gassmann-equivalent non-conjugate subgroups of GSp(4,F_3)
+// returns the smallest integer n such that the maximum F_3-dimension of the subspace of F_3^4 fixed
+// by an index-n subgroup distinguishes the different groups given as input.
+// returns -#poss if no such n is found
+    assert #poss in {2,3,4};
+	Hs := [ZG[x[1]]`subgroup : x in poss];
+	Hords := [#H : H in Hs];
+	for n := 1 to Maximum(Hords) do
+		tempset := {max_pts_over_ext(H,n) : H in Hs};
+		if #tempset eq #poss then
 			return n;
 		end if;
-    end for;
-/*
-    print "Test failure: For any given degree, the maximum number of three 
-torsion points over a number field of that degree is the same.";
-*/
-    return -1;
+	end for;
+	return -#poss;
 end function;
 
 intrinsic distinguish(defpols :: SeqEnum, poss :: SeqEnum) -> SeqEnum, SeqEnum
@@ -570,8 +541,8 @@ on the maximum number of three-torsion points over small degree number fields.}
 			end if;
 		end if;
     elif #poss eq 2 then
-		n := final_test(poss);
-		if (n eq -1) or (n eq 6) or (n eq 8 and ZG[poss[1][1]]`order eq 32) then
+		n := whatindexsubgroupdistinguishes(poss);
+		if (n eq -2) or (n eq 6) or (n eq 8 and ZG[poss[1][1]]`order eq 32) then
 			idGal := projmod3Galoisimage(defpols,ExactQuotient(ZG[poss[1][1]]`order,2));
 			minusone := Center(G).1;
 			for i := 1 to #poss do
@@ -698,7 +669,7 @@ cond should be a multiple of the product of all bad primes.}
     elif #possibilities[1] gt 1 then
 	//	print "Sampled data about frobenius cannot distinguish the image upto GL conjugacy uniquely.";
 	//	print "The image could be a subgroup of one of the following index:";
-	//	print possibilities[1], final_test(possibilities[1]);
+	//	print possibilities[1], whatindexsubgroupdistinguishes(possibilities[1]);
 	//	print "Looking at global data to distinguish between the", #possibilities[1], "possible images...";
 		return distinguish(definingpols,possibilities[1]);
     else
