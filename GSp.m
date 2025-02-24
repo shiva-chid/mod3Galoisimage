@@ -419,11 +419,11 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
     M := {};
     for i:= 1 to #T do
         if 2*T[i][2] gt IndexLimit then continue; end if;
-	if excludepgroups eq 1 then
-	    m := [H`subgroup:H in MaximalSubgroups(S[i] : IndexLimit:=IndexLimit div T[i][2], OrderMultipleOf:=O) | filter(H`subgroup)];
-	else
-	    m := [H`subgroup:H in MaximalSubgroups(S[i] : IndexLimit:=IndexLimit div T[i][2], OrderMultipleOf:=O) | filter(H`subgroup) and not PrimeFactors(H`order) in {[],[excludepgroups]}];
-	end if;
+        if excludepgroups eq 1 then
+            m := [H`subgroup:H in MaximalSubgroups(S[i] : IndexLimit:=IndexLimit div T[i][2], OrderMultipleOf:=O) | filter(H`subgroup)];
+        else
+            m := [H`subgroup:H in MaximalSubgroups(S[i] : IndexLimit:=IndexLimit div T[i][2], OrderMultipleOf:=O) | filter(H`subgroup) and not PrimeFactors(H`order) in {[],[excludepgroups]}];
+        end if;
         for H in m do
             level,K := GSpLevel(H);
             J := X[<level,GSpIndex(K),GLOrbitSignature(K:N:=level)>]; j := 1;
@@ -454,7 +454,7 @@ intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt:Verbose:=
         if a[3] lt b[3] then return -1; elif a[3] gt b[3] then return 1; end if;
         return 0;
     end function;
-    label := func<N,i,n|Sprintf("%o.%o.%o",N,i,n)>;  IL := AssociativeArray();
+    label := func<N,i,n|Sprintf("%o.%o.%o",N,i,n)>; IL := AssociativeArray();
     ntab := AssociativeArray(); for k in Keys(X) do ntab[k] := 1; end for;
     for k in Sort([k:k in Keys(X)]) do
         // all parents of subgroups in X[k] must have smaller index and have already been labeled

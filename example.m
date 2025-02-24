@@ -7,4 +7,5 @@ imglabel, img, X := mod3Galoisimage(C);
 imglabel;
 img;
 X[imglabel]`subgroup eq img;
+GSpLookupLabel(X,img) eq imglabel;
 
