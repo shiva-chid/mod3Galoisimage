@@ -1,7 +1,13 @@
 AttachSpec("spec");
 ZZ := Integers();
+QQ := Rationals();
+R<x> := PolynomialRing(Rationals());
+N := 3;
+CCs, phi := GSpConjugacyClasses(4,N);
+ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N);
+X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,Verbose:=true);
+Ls := Sort(Setseq(Keys(X)));
 
-X := GSpLattice(4,3,0);
 lbl := "3.12960.9";
 G := CSp(4,3);
 H := X[lbl]`subgroup; H := ChangeRing(H,GF(3));
@@ -22,14 +28,24 @@ for g in GL(3,2) do
     end try;
 end for;
 
-time Cnew := Genus2CurveFromBurkhardtTwistPoint(F,MtoB : P3pt := [1,-1,1,2]); // the point can be varied.
+for a, b, c, d in [-3..3] do
+    randomptinP3 := [a,b,c,d];
+    try
+        time Cnew := Genus2CurveFromBurkhardtTwistPoint(F,MtoB : P3pt := randomptinP3); // the point can be varied.
+        break a;
+    catch e;
+        continue;
+    end try;
+end for;
+
 time Cnew := IntegralModel(Cnew); Cnew;
-imglbl, img, X := mod3Galoisimage(Cnew);
+imglbl, img := mod3Galoisimage(Cnew : certainty:=0.9999,Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 if imglbl ne lbl then
     time Cnew := CorrectTwist(Cnew,K,tau,rho); Cnew;
-    imglbl, img, X := mod3Galoisimage(Cnew);
+    imglbl, img := mod3Galoisimage(Cnew);
     assert imglbl eq lbl;
-    imglbl, GroupName(img);
     img := ChangeRing(img,GF(3));
     assert IsConjugate(G,Image(rho),img);
 end if;
+imglbl, GroupName(img);
+

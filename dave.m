@@ -48542,7 +48542,53 @@ intrinsic torspoly_part2(F :: Any, atoe :: SeqEnum) -> RngMPolElt
 end intrinsic;
 
 intrinsic threetorspoly(F :: Any, atoe :: SeqEnum) -> RngMPolElt
-{returns a 3-division polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e}
+{returns a degree 80 3-division polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e. F is the base field.}
     return torspoly_part1(F,atoe) + torspoly_part2(F,atoe);
 end intrinsic;
 
+intrinsic separablethreedivpoly(C :: CrvHyp) -> RngUPolElt, RngUPolElt, RngIntElt
+{returns two separable polynomials of deg 80 and 40 corresponding to the three-torsion field
+and the projective three-torsion field for the Jacobian of the given curve.
+The lcm of all denominators in the suppressed sextic hyperelliptic polynomial
+used in computing the three torsion polynomial is also returned. }
+	C := SimplifiedModel(C);
+    f := HyperellipticPolynomials(C);
+    P<x> := Parent(f);
+    F := BaseRing(P);
+    newf, twistbyd := goodsexticpoly(f);
+    atoe := [Coefficient(newf,4-i) : i in [0..4]];
+    if atoe[2] eq 0 and atoe[4] eq 0 then
+		newf := P ! ((x+1)^6*Evaluate(newf,x/(x+1)));
+		newf, twistbyd1 := goodsexticpoly(newf);
+		twistbyd *:= twistbyd1;
+		atoe := [Coefficient(newf,4-i) : i in [0..4]];
+    end if;
+    lcmofdens := LCM([Denominator(atoe[i]) : i in [1..#atoe]]);
+    fulltp := threetorspoly(F, atoe);
+    if not IsSeparable(fulltp) then
+//		print "Not separable";
+		for a,b,c,d in [1..5] do
+			if a*d-b*c eq 0 then continue; end if;
+            newf := P ! ((c*x+d)^6*Evaluate(newf,(a*x+b)/(c*x+d)));
+            newf, twistbyd2 := goodsexticpoly(newf);
+            twistbyd *:= twistbyd2;
+            atoe := [Coefficient(newf,4-i) : i in [0..4]];
+            lcmofdens := LCM([Denominator(atoe[i]) : i in [1..#atoe]]);
+            fulltp := threetorspoly(F, atoe);
+            if IsSeparable(fulltp) then
+//				    print "Separable";
+                break a;
+            end if;
+		end for;
+    end if;
+    if IsSquare(twistbyd) then
+		ffnew := fulltp;
+		ggnew := P ! [Coefficient(ffnew,2*i) : i in [0..Degree(ffnew)/2]];
+    else
+		ff := fulltp;
+		gg := P ! [Coefficient(ff,2*i) : i in [0..Degree(ff)/2]];
+		ggnew := P ! [Coefficient(gg,i)*twistbyd^(Degree(gg)-i) : i in [0..Degree(gg)]];
+		ffnew := Evaluate(ggnew,x^2);
+    end if;
+    return ffnew, ggnew, lcmofdens;
+end intrinsic;

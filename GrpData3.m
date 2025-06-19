@@ -1,25 +1,32 @@
+// Analysing the subgroups of GSp(4,F_3)
+// including code to generate tables in the paper.
+
+N := 3;
+filename := Sprintf("GrpData%o.log",N);
+SetLogFile(filename);
 AttachSpec("spec");
-X := GSpLattice(4,3,0);
+CCs, phi := GSpConjugacyClasses(4,N);
+ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N);
+X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi);
 assert #X eq 330;
 G := GSp(4,3);
-CCs := ConjugacyClasses(G);
-phi := ClassMap(G);
 
 L := [lbl : lbl in Setseq(Keys(X)) | lbl eq "1.1.1" or exists(cc){cc[3] : cc in ConjugacyClasses(H) | cc[1] eq 2 and GSpSimilitudeCharacter(cc[3]) eq -1} where H is X[lbl]`subgroup];
+L := Sort(L,func<x,y|(xs[1] ne ys[1]) select xs[1]-ys[1] else (xs[2] ne ys[2]) select xs[2]-ys[2] else xs[3]-ys[3] where xs is [StringToInteger(a) : a in Split(x,".")] where ys is [StringToInteger(a) : a in Split(y,".")]>);
 Xsubs := [lbl eq "1.1.1" select GSp(4,3) else X[lbl]`subgroup : lbl in L];
 assert #Xsubs eq 280;
-dat1 := [GSpCharpolsDistribution(H) : H in Xsubs];
-dat2 := [GSpGassmannDistribution(H : CCs := CCs, phi := phi) : H in Xsubs];
 
 // how many subgroups have same distribution of characteristic polynomials?
+dat1 := [[x[2]/totalord : x in ords] where ords,totalord is GSpCharpolsDistribution(H : ClassSigns:=ClassSigns,SignPhi:=SignPhi) : H in Xsubs];
 sdat1 := SequenceToSet(dat1); #sdat1;
-// 84
+// 
 msdat1 := SequenceToMultiset(dat1);
 dat1_dups := [<x,n> : x in sdat1 | n gt 1 where n is Multiplicity(msdat1,x)];
 {* x[2] : x in dat1_dups *};
-// {* 2^^11, 3^^7, 4^^4, 5^^5, 6, 7, 8^^2, 9, 12, 15, 21, 29, 34 *}
+// 
 
 // how many subgroups have same distribution of conjugacy classes, i.e., are Gassmann-equivalent?
+dat2 := [GSpGassmannDistribution(H : CCs:=CCs,phi:=phi) : H in Xsubs];
 sdat2 := SequenceToSet(dat2); #sdat2;
 // 230
 msdat2 := SequenceToMultiset(dat2);
@@ -80,6 +87,7 @@ Gassmanndups_lbls;
 ////////////////////////////////////////////////////////////////////////////////////////////
 // distinguishing using dimension of fixed subspace, i.e., dimension of 3-torsion over Q. //
 ////////////////////////////////////////////////////////////////////////////////////////////
+
 maxptsoverQ := [[max_pts_over_ext(H,1) where H is X[y]`subgroup : y in x] : x in Gassmanndups_lbls];
 maxptsoverQ;
 /*
@@ -296,9 +304,9 @@ assert { IsConjugate(G,X[x[1]]`subgroup,ou(X[x[2]]`subgroup)) : x in Gassmanndup
 assert Gassmanndups_GLconjugate_lbls eq [[GSpLookupLabel(X,ou(X[y]`subgroup)) : y in x] : x in Gassmanndups_GLconjugate_lbls];
 
 
-/////////////////////////////////////
-// Code to generate table in paper //
-/////////////////////////////////////
+//////////////////////////////////////
+// Code to generate tables in paper //
+//////////////////////////////////////
 
 #Gassmanndups_lbls1;
 maxptsoverextns := [[<max_pts_over_ext(H meet SG,1)> cat <max_pts_over_ext(H,n) : n in [1,2,3,6,8,12]> where H is X[y]`subgroup : y in x] : x in Gassmanndups_lbls1];
@@ -325,45 +333,28 @@ inds := [i : i in [1..#maxptsoverextns] | #Set(maxptsoverextns[i]) eq #maxptsove
 inds;
 // [ 2, 3, 4, 5, 6, 7, 8, 11, 14 ]
 
+s := "\\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=";
+
 for i in inds do
     for j in [1..#Gassmanndups_lbls1[i]] do
         lbl := Gassmanndups_lbls1[i][j];
+        lblwithlink := Sprintf("%o%o}{%o}", s, lbl, lbl);
         gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in GeneratorsSequence(X[lbl]`subgroup)]; gens := gens[1..#gens-8];
         dims := &cat[IntegerToString(n) cat "&" : n in maxptsoverextns[i][j]]; dims := dims[1..#dims-1];
-        printf "%o & %o & %o\\\\\n", lbl, gens, dims;
+        printf "%o & %o & %o\\\\\n", lblwithlink, gens, dims;
     end for;
     printf "\\hline\n";
 end for;
-/*
-3.8640.2 & [ 1, 2, 1, 0, 2, 1, 0, 1, 2, 2, 2, 1, 2, 2, 1, 2 ]\newline[ 2, 1, 2, 0, 1, 2, 0, 2, 1, 0, 2, 2, 0, 1, 2, 2 ] & 0&0&2&0&2&0&4\\
-3.8640.4 & [ 1, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 0, 0, 0, 2 ]\newline[ 0, 1, 2, 0, 1, 0, 0, 2, 2, 2, 1, 2, 2, 2, 2, 1 ] & 0&0&1&0&2&0&4\\
-\hline
-3.320.1 & [ 1, 2, 2, 2, 1, 0, 1, 0, 2, 0, 1, 2, 2, 1, 2, 1 ]\newline[ 1, 1, 0, 1, 2, 1, 2, 0, 2, 0, 0, 2, 1, 0, 1, 1 ] & 1&1&1&1&2&0&2\\
-3.320.2 & [ 2, 1, 1, 2, 0, 1, 0, 2, 2, 1, 0, 1, 0, 1, 0, 0 ]\newline[ 1, 2, 0, 1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 1, 2, 0 ] & 1&0&1&0&1&0&2\\
-3.320.5 & [ 2, 2, 1, 1, 2, 0, 2, 2, 0, 2, 1, 0, 1, 2, 1, 0 ]\newline[ 0, 0, 1, 1, 1, 2, 1, 2, 0, 0, 2, 1, 2, 2, 2, 2 ] & 0&0&1&1&2&0&2\\
-3.320.6 & [ 2, 1, 1, 2, 2, 2, 2, 2, 1, 0, 2, 0, 1, 0, 1, 0 ]\newline[ 2, 2, 0, 2, 1, 2, 1, 0, 2, 1, 1, 1, 2, 2, 2, 1 ] & 0&0&1&0&1&0&2\\
-\hline
-3.8640.12 & [ 2, 1, 0, 1, 0, 2, 0, 0, 0, 1, 2, 2, 0, 0, 0, 2 ]\newline[ 1, 0, 0, 1, 0, 2, 0, 0, 0, 2, 1, 0, 0, 0, 0, 2 ] & 0&0&2&0&2&0&4\\
-3.8640.13 & [ 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 2, 2, 0, 0, 0, 2 ]\newline[ 2, 0, 2, 2, 0, 2, 0, 2, 0, 0, 1, 0, 0, 0, 0, 1 ] & 0&0&1&0&2&0&4\\
-\hline
-3.640.2 & [ 2, 2, 1, 0, 0, 2, 0, 1, 2, 2, 0, 1, 0, 2, 0, 0 ]\newline[ 2, 0, 0, 1, 1, 1, 1, 2, 2, 2, 1, 1, 2, 0, 2, 2 ]\newline[ 1, 0, 0, 2, 2, 1, 2, 1, 1, 2, 2, 2, 1, 0, 1, 0 ] & 1&1&1&1&2&0&0\\
-3.640.3 & [ 1, 0, 0, 2, 0, 1, 0, 0, 1, 2, 2, 2, 0, 1, 0, 2 ]\newline[ 2, 0, 1, 1, 1, 2, 1, 0, 2, 1, 0, 0, 2, 0, 2, 2 ] & 1&0&1&0&2&0&0\\
-3.640.4 & [ 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 2, 1 ]\newline[ 1, 1, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 2 ]\newline[ 0, 2, 2, 2, 2, 0, 2, 2, 2, 1, 0, 1, 1, 2, 1, 0 ] & 1&0&1&1&2&0&0\\
-3.640.1 & [ 2, 2, 1, 2, 1, 1, 1, 2, 1, 2, 2, 0, 2, 0, 2, 2 ]\newline[ 1, 1, 2, 1, 0, 1, 0, 2, 0, 0, 2, 1, 0, 0, 0, 2 ] & 1&1&1&2&2&0&0\\
-\hline
-3.320.3 & [ 1, 0, 2, 2, 2, 1, 2, 0, 2, 2, 1, 2, 1, 1, 1, 2 ]\newline[ 2, 0, 1, 1, 2, 2, 2, 2, 1, 1, 2, 1, 1, 0, 1, 0 ] & 0&0&1&0&2&0&2\\
-3.320.4 & [ 0, 2, 1, 2, 0, 0, 0, 1, 2, 1, 1, 1, 0, 2, 0, 1 ]\newline[ 0, 0, 1, 2, 0, 0, 0, 2, 2, 2, 1, 2, 0, 1, 0, 2 ]\newline[ 0, 0, 2, 1, 1, 1, 1, 1, 0, 0, 1, 1, 2, 1, 2, 1 ] & 0&0&1&0&1&0&2\\
-\hline
-3.5760.2 & [ 2, 1, 1, 2, 2, 1, 2, 0, 0, 1, 1, 0, 1, 1, 1, 2 ]\newline[ 0, 0, 2, 0, 0, 0, 0, 1, 1, 0, 2, 1, 0, 2, 0, 1 ] & 2&1&2&2&3&0&0\\
-3.5760.5 & [ 1, 1, 2, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 2, 0, 0 ]\newline[ 2, 1, 0, 2, 2, 1, 2, 1, 1, 1, 0, 1, 1, 0, 1, 0 ] & 2&1&2&1&3&0&0\\
-\hline
-3.2160.10 & [ 2, 2, 1, 0, 1, 1, 1, 1, 0, 2, 1, 0, 2, 1, 2, 1 ]\newline[ 0, 1, 1, 2, 1, 2, 1, 1, 2, 0, 1, 1, 2, 0, 2, 1 ] & 0&0&1&0&1&2&2\\
-3.2160.9 & [ 1, 2, 2, 1, 2, 2, 2, 2, 2, 0, 1, 0, 1, 0, 1, 0 ]\newline[ 1, 2, 0, 1, 0, 2, 0, 0, 0, 1, 1, 1, 0, 0, 0, 2 ] & 0&0&1&0&1&1&2\\
-\hline
-3.240.6 & [ 2, 0, 1, 2, 1, 2, 1, 2, 0, 0, 1, 0, 1, 0, 0, 2 ]\newline[ 2, 0, 0, 0, 2, 1, 1, 0, 0, 0, 2, 0, 0, 0, 1, 1 ] & 0&0&1&0&0&1&0\\
-3.240.7 & [ 2, 0, 0, 2, 0, 2, 1, 0, 0, 0, 2, 0, 2, 0, 0, 1 ]\newline[ 0, 0, 1, 2, 2, 2, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0 ] & 0&0&1&0&0&1&1\\
-\hline
-3.2880.13 & [ 1, 1, 2, 2, 2, 0, 2, 2, 1, 0, 0, 2, 1, 1, 1, 2 ]\newline[ 2, 1, 1, 0, 0, 2, 0, 1, 0, 2, 1, 2, 0, 0, 0, 1 ]\newline[ 2, 2, 0, 2, 2, 1, 2, 0, 0, 1, 2, 1, 1, 0, 1, 1 ] & 0&0&2&0&2&0&3\\
-3.2880.17 & [ 2, 1, 0, 2, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 0, 1 ]\newline[ 2, 2, 0, 2, 0, 2, 0, 0, 0, 1, 2, 1, 0, 0, 0, 2 ]\newline[ 2, 2, 1, 1, 1, 0, 1, 1, 1, 2, 2, 1, 2, 1, 2, 0 ] & 0&0&1&0&2&0&3\\
-\hline
-*/
+
+ordG := #G; ordG;
+for i := 1 to #Gassmanndups_GLconjugate_lbls do
+    for j := 1 to #Gassmanndups_GLconjugate_lbls[i] do
+        lbl := Gassmanndups_GLconjugate_lbls[i][j];
+        H := X[lbl]`subgroup;
+        ordH := ordG/X[lbl]`index;
+        lblwithlink := Sprintf("%o%o}{%o}", s, lbl, lbl);
+        gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in GeneratorsSequence(H)]; gens := gens[1..#gens-8];
+        printf "%o & %o & %o\\\\\n", ordH, lblwithlink, gens;
+    end for;
+    printf "\\hline\n";
+end for;
