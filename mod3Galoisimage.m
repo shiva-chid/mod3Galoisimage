@@ -557,9 +557,11 @@ and deducing the mod 3 Galois image. */
 
 		sigmabasiscoords := [coords[Index(all_pts_k,sigmabasis[i])] : i in [1..#sigmabasis]];
 		frobpmat := G ! Matrix(Z3,4,4,sigmabasiscoords);
-		torsimage := sub<G | torsimage, frobpmat>;
-		_ := exists(l){l : l in Keys(X) | IsConjugate(G,X[l]`subgroup,torsimage)};
-		if l in Ls then return l, X[l]`subgroup; end if;
+		if not frobpmat in torsimage then
+			torsimage := sub<G | torsimage, frobpmat>;
+		end if;
+		boo := exists(l){l : l in Ls | IsConjugate(G,X[l]`subgroup,torsimage)};
+		if boo then return l, X[l]`subgroup; end if;
 
 		p := NextPrime(p);
 		while dens mod p eq 0 do
