@@ -1,0 +1,2 @@
+178,0
+S,Mod3GaloisRepresentation,"Given n = the degree of the three torsion field of Jacobian of C, returns the data associated to the mod-3 Galois representation. The first return value is the representation, as a homomorphism from a permutation group A to GSp(4,3). The second return value is a map from A to the set of automorphisms of the 3-torsion field K, which is returned as the third return value",0,2,0,0,0,0,0,0,0,148,,0,0,338,,GrpHom,175,27,-38,-38,-38
