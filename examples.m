@@ -45,3 +45,9 @@ time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,2
 assert X[imglabel]`subgroup eq img;
 print imglabel;
 
+
+// A curve where bruteforce is needed, and the image is 3.3240.6
+C := HyperellipticCurveOfGenus(2,3*x^6 + 198*x^4 - 396*x^2 - 24);
+time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+assert X[imglabel]`subgroup eq img;
+print imglabel;
