@@ -39,7 +39,7 @@ for a, b, c, d in [-3..3] do
 end for;
 
 time Cnew := IntegralModel(Cnew); Cnew;
-imglbl, img := mod3Galoisimage(Cnew : certainty:=0.9999,Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+imglbl, img := mod3Galoisimage(Cnew : errorbound:=0.0001,Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 if imglbl ne lbl then
     time Cnew := CorrectTwist(Cnew,K,tau,rho); Cnew;
     imglbl, img := mod3Galoisimage(Cnew);

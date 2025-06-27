@@ -218,7 +218,7 @@ intrinsic GSpClassSignature(H::GrpMat:N:=0) -> SeqEnum[Tup]
 end intrinsic;
 
 intrinsic GSpConjugacyClasses(d::RngIntElt, N::RngIntElt) -> SeqEnum[Tup], Map
-{ An ordered sequence of tuples <order,length,similitude,rep> giving the conjugacy classes of GSp(4,Integers(N)), and the classmap. }
+{ An ordered sequence of tuples <order,length,similitude,rep> giving the conjugacy classes of GSp(4,Z/N), and the classmap. }
     if N eq 1 then return [<1,1,1,GL(4,Integers())!IdentityMatrix(4,Integers())>]; end if;
     require IsPrimePower(N) : "Currently only prime power level is supported.";
     G := GSp(d,N);
@@ -228,7 +228,7 @@ intrinsic GSpConjugacyClasses(d::RngIntElt, N::RngIntElt) -> SeqEnum[Tup], Map
 end intrinsic;
 
 intrinsic GSpConjugacyClassSigns(d::RngIntElt, N::RngIntElt:CCs:=[],phi:=map<{1}->{1}|x:->1>) -> SeqEnum[Tup], Map
-{ An ordered sequence of tuples <sign,size> where sign is <[ap,bp,p] mod N,n> where ap, bp are the cubic and quadratic coefficients of the characteristic polynomials of elements of GSp(4,Integers(N)) and n is the dimension of fixed space, and an index map of these signs. }
+{ An ordered sequence of tuples <sign,size> where sign is <[ap,bp,p] mod N,n> where ap, bp are the cubic and quadratic coefficients of the characteristic polynomials of elements of GSp(4,Z/N) and n is the dimension of fixed space, and an index map of these signs. }
     if N eq 1 then return [<1,1>]; end if;
     require IsPrimePower(N) : "Currently only prime power level is supported.";
     ZN := Integers(N);
@@ -441,29 +441,29 @@ gspnode := recformat<
     gassmanndist:SeqEnum>;
 
 intrinsic GSpLattice(d::RngIntElt, N::RngIntElt, IndexLimit::RngIntElt: CCs:=[], phi:=map<{1}->{1}|x:->1>, ClassSigns:=[], SignPhi:=map<{1}->{1}|x:->1>, Verbose:=true, IndexDivides:=false, excludepgroups:=1) -> Assoc
-{ Lattice of subgroups of GSp(d,N) with surjective similitude character and index bounded by IndexLimit. Returns a list of records with attributes label, level, index, orbits, children, parents, subgroup where children and parents are lists of labels that identify maximal subgroups and minimal supergroups. }
+{ Lattice of subgroups of GSp(d,N) with surjective similitude character and index bounded by IndexLimit. Returns an associative array containing records with attributes label, level, index, orbits, children, parents, subgroup where children and parents are lists of labels that identify maximal subgroups and minimal supergroups. }
     require d ge 2 and IsEven(d): "Degree must be a positive even integer";
     require N gt 1: "Level must be an integer greater than 1";
     G := GSp(d,N);
     if IndexLimit eq 0 then IndexLimit := #G; end if;
     O := IndexDivides select ExactQuotient(#G,IndexLimit) else 1;
     if excludepgroups ne 1 then
-	require IsPrime(excludepgroups) : "Currently only p-groups for prime p can be excluded";
-	p := excludepgroups;
-	if Verbose then printf "Enumerating subgroups of GSp(%o,Z/%oZ) of index %o %o that are not %o-groups and that have maximal similitude...", d, N, IndexDivides select "dividing" else "at most", IndexLimit, p; s := Cputime(); end if;
-	di := GSpSimilitudeIndex(G);
-	filter := func<H|GSpSimilitudeIndex(H) eq di>;
-	if not PrimeFactors(O) in {[],[p]} then
-	    S := [H`subgroup: H in Subgroups(G : IndexLimit:=IndexLimit, OrderMultipleOf:=O) | filter(H`subgroup)];
-	else
-	    divs := [d : d in Divisors(#G div O) | IndexLimit*O*d gt #G and not PrimeFactors(d) in {[],[p]}];
-	    S := &cat[[H`subgroup : H in Subgroups(G : OrderEqual:=O*d) | filter(H`subgroup)] : d in divs];
-	end if;
+        require IsPrime(excludepgroups) : "Currently only p-groups for prime p can be excluded";
+        p := excludepgroups;
+        if Verbose then printf "Enumerating subgroups of GSp(%o,Z/%oZ) of index %o %o that are not %o-groups and that have maximal similitude...", d, N, IndexDivides select "dividing" else "at most", IndexLimit, p; s := Cputime(); end if;
+        di := GSpSimilitudeIndex(G);
+        filter := func<H|GSpSimilitudeIndex(H) eq di>;
+        if PrimeFactors(O) in {[],[p]} then
+            divs := [d : d in Divisors(#G div O) | IndexLimit*O*d gt #G and not PrimeFactors(d) in {[],[p]}];
+            S := &cat[[H`subgroup : H in Subgroups(G : OrderEqual:=O*d) | filter(H`subgroup)] : d in divs];
+        else
+            S := [H`subgroup: H in Subgroups(G : IndexLimit:=IndexLimit, OrderMultipleOf:=O) | filter(H`subgroup)];
+        end if;
     else
-	if Verbose then printf "Enumerating subgroups of GSp(%o,Z/%oZ) of index %o %o with maximal similitude...", d, N, IndexDivides select "dividing" else "at most", IndexLimit; s := Cputime(); end if;
-	di := GSpSimilitudeIndex(G);
-	filter := func<H|GSpSimilitudeIndex(H) eq di>;
-	S := [H`subgroup: H in Subgroups(G : IndexLimit:=IndexLimit, OrderMultipleOf:=O) | filter(H`subgroup)];
+        if Verbose then printf "Enumerating subgroups of GSp(%o,Z/%oZ) of index %o %o with maximal similitude...", d, N, IndexDivides select "dividing" else "at most", IndexLimit; s := Cputime(); end if;
+        di := GSpSimilitudeIndex(G);
+        filter := func<H|GSpSimilitudeIndex(H) eq di>;
+        S := [H`subgroup: H in Subgroups(G : IndexLimit:=IndexLimit, OrderMultipleOf:=O) | filter(H`subgroup)];
     end if;
     if Verbose then
         printf "found %o subgroups in %.3os\n", #S, Cputime()-s;
@@ -816,7 +816,7 @@ If the remaining possible images all have same ClassSignDistribution, the third 
 end intrinsic;
 
 intrinsic GSpModNImageProbablisticFromFrob(C::CrvHyp,N::RngIntElt,eps::FldReElt:B:=20,prec:=10,CCs:=[],phi:=map<{1}->{1}|x:->1>,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>,Ls:=[],X:=AssociativeArray(),Verbose:=false) -> SeqEnum, SeqEnum, BoolElt
-{ Given a genus 2 hyperelliptic curve C/Q, an integer N > 1, and a number eps close to 1 (and less than 1), returns the label of a subgroup H of GSp(4,Z/NZ) that is the mod-N image with probability >= eps, followed by a boolean that will be true if H is provably equal to the mod-N image.
+{ Given a genus 2 hyperelliptic curve C/Q, an integer N > 1, and a number eps close to 0 (and positive), returns the label of a subgroup H of GSp(4,Z/NZ) that is the mod-N image with probability >= 1-eps, followed by a boolean that will be true if H is provably equal to the mod-N image.
 If a unique subgroup H is not determined, a list of labels of possible subgroups is returned. }
     require N gt 1: "N must be greater than 1";
     if CCs eq [] then CCs, phi := GSpConjugacyClasses(4,N); end if;
@@ -832,7 +832,7 @@ If a unique subgroup H is not determined, a list of labels of possible subgroups
     S := GSpBayesianProbabilityUpdateFrobMat(A,possibleimages:N:=N,CCs:=CCs,phi:=phi,prec:=prec);
     Ls := [GSpLookupLabel(X,s[1]) : s in S];
     if stop then return Ls, S, false; end if;
-    if S[1,2] ge eps then return Ls[[1]], S[[1]], false; end if;
+    if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
     Re := RealField();
     B0 := B+1; size := B div 2;
     B := B+size;
@@ -846,17 +846,17 @@ If a unique subgroup H is not determined, a list of labels of possible subgroups
         S := GSpBayesianProbabilityUpdateFrobMat(A,possibleimages:N:=N,CCs:=CCs,phi:=phi,prec:=prec);
         Ls := [GSpLookupLabel(X,s[1]) : s in S];
         if stop then return Ls, S, false; end if;
-        if S[1,2] ge eps then return Ls[[1]], S[[1]], false; end if;
+        if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
         B0 := B+1;
         B := B+size;
         if Verbose then printf "Based on Frobenius up to the %oth prime, %o possibilities remain for the mod-%o Galois image, with probabilities:\n%o\n", B0-1, #S, N, [Re ! x[2] : x in S]; end if;
     end while;
-    inds := [i : i in [1..#S] | S[i][2] ge 1-eps]; assert #inds ge 1;
+    inds := [i : i in [1..#S] | S[i][2] ge eps]; assert #inds ge 1;
     return Ls[inds], S[inds], false;
 end intrinsic;
 
 intrinsic GSpModNImageProbablisticFromFrobSign(C::CrvHyp,N::RngIntElt,eps::FldReElt:B:=50,prec:=10,CCs:=[],phi:=map<{1}->{1}|x:->1>,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>,Ls:=[],X:=AssociativeArray(),Verbose:=false) -> SeqEnum, SeqEnum, BoolElt
-{ Given a genus 2 hyperelliptic curve C/Q, an integer N > 1, and a number eps close to 1 (and less than 1), returns the label of a subgroup H of GSp(4,Z/NZ) that is the mod-N image with probability >= eps, followed by a boolean that will be true if H is provably equal to the mod-N image.
+{ Given a genus 2 hyperelliptic curve C/Q, an integer N > 1, and a number eps close to 0 (and positive), returns the label of a subgroup H of GSp(4,Z/NZ) that is the mod-N image with probability >= 1-eps, followed by a boolean that will be true if H is provably equal to the mod-N image.
 If a unique subgroup H is not determined, a list of labels of possible subgroups is returned. }
     require N gt 1: "N must be greater than 1";
     if CCs eq [] then CCs, phi := GSpConjugacyClasses(4,N); end if;
@@ -872,7 +872,7 @@ If a unique subgroup H is not determined, a list of labels of possible subgroups
     S := GSpBayesianProbabilityUpdateFrobSign(A,possibleimages:N:=N,ClassSigns:=ClassSigns,SignPhi:=SignPhi,prec:=prec);
     Ls := [GSpLookupLabel(X,s[1]) : s in S];
     if stop then return Ls, S, false; end if;
-    if S[1,2] ge eps then return Ls[[1]], S[[1]], false; end if;
+    if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
     Re := RealField();
     B0 := B+1; size := B div 2;
     B := B+size;
@@ -887,11 +887,11 @@ If a unique subgroup H is not determined, a list of labels of possible subgroups
         Ls := [GSpLookupLabel(X,s[1]) : s in S];
         if stop then return Ls, S, false; end if;
 //        print #S, #Ls, [s[2] : s in S];
-        if S[1,2] ge eps then return Ls[[1]], S[[1]], false; end if;
+        if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
         B0 := B+1;
         B := B+size;
         if Verbose then printf "Based on Frobenius signs up to the %oth prime, %o possibilities remain for the mod-%o Galois image, with probabilities:\n%o\n", B0-1, #S, N, [Re ! x[2] : x in S]; end if;
     end while;
-    inds := [i : i in [1..#S] | S[i][2] ge 1-eps]; assert #inds ge 1;
+    inds := [i : i in [1..#S] | S[i][2] ge eps]; assert #inds ge 1;
     return Ls[inds], S[inds], false;
 end intrinsic;

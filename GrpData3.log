@@ -1,510 +1,281 @@
 > AttachSpec("spec");
 > CCs, phi := GSpConjugacyClasses(4,N);
 > ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N);
-> X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=Sign\
-Phi);
-Enumerating subgroups of GSp(4,Z/3Z) of index at most 103680 with maximal similitude...found 330 subgroups in 0.420s
-Computing level, index, orbit signature, and class signature for 330 groups...0.560s
-Computing lattice edges for 330 groups...found 1084 edges in 2.690s
+> X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi);
+Enumerating subgroups of GSp(4,Z/3Z) of index at most 103680 with maximal similitude...found 330 subgroups in 0.360s
+Computing level, index, orbit signature, and class signature for 330 groups...0.530s
+Computing lattice edges for 330 groups...found 1084 edges in 2.480s
 Labeling 330 subgroups
 Canonicalizing subgroup of size 2592 and index 40 with 40 conjugates
 Enumerating 40 conjugates of subgroup H of size 2592...0.010s
-Canonicalized subgroup of size 2592 with 40 conjugates in 0.070s
+Canonicalized subgroup of size 2592 with 40 conjugates in 0.060s
 Canonicalizing subgroup of size 864 and index 3 with 3 conjugates
 Enumerating 3 conjugates of subgroup H of size 864...0.000s
-Canonicalized subgroup of size 864 with 3 conjugates in 0.090s
+Canonicalized subgroup of size 864 with 3 conjugates in 0.080s
 Canonicalizing subgroup of size 432 and index 2 with 1 conjugates
 Canonicalized subgroup of size 432 with 1 conjugates in 0.030s
 Canonicalizing subgroup of size 432 and index 2 with 1 conjugates
 Canonicalized subgroup of size 432 with 1 conjugates in 0.030s
-Labeling took 0.320s
-Minimizing generators for 330 groups...5.970s
+Labeling took 0.280s
+Minimizing generators for 330 groups...3.580s
 > assert #X eq 330;
 > G := GSp(4,3);
 > 
-> L := [lbl : lbl in Setseq(Keys(X)) | lbl eq "1.1.1" or exists(cc){cc[3] : cc\
- in ConjugacyClasses(H) | cc[1] eq 2 and GSpSimilitudeCharacter(cc[3]) eq -1} \
-where H is X[lbl]`subgroup];
-> L := Sort(L,func<x,y|(xs[1] ne ys[1]) select xs[1]-ys[1] else (xs[2] ne ys[2\
-]) select xs[2]-ys[2] else xs[3]-ys[3] where xs is [StringToInteger(a) : a in \
-Split(x,".")] where ys is [StringToInteger(a) : a in Split(y,".")]>);
+> L := [lbl : lbl in Setseq(Keys(X)) | lbl eq "1.1.1" or exists(cc){cc[3] : cc in ConjugacyClasses(H) | cc[1] eq 2 and GSpSimilitudeCharacter(cc[3]) eq -1} where H is X[lbl]`subgroup];
+> L := Sort(L,func<x,y|(xs[1] ne ys[1]) select xs[1]-ys[1] else (xs[2] ne ys[2]) select xs[2]-ys[2] else xs[3]-ys[3] where xs is [StringToInteger(a) : a in Split(x,".")] where ys is [Strin\
+gToInteger(a) : a in Split(y,".")]>);
 > Xsubs := [lbl eq "1.1.1" select GSp(4,3) else X[lbl]`subgroup : lbl in L];
 > assert #Xsubs eq 280;
 > 
 > // how many subgroups have same distribution of characteristic polynomials?
-> dat1 := [[x[2]/totalord : x in ords] where ords,totalord is GSpCharpolsDistr\
-ibution(H : ClassSigns:=ClassSigns,SignPhi:=SignPhi) : H in Xsubs];
+> dat1 := [[x[2]/totalord : x in ords] where ords,totalord is GSpCharpolsDistribution(H : ClassSigns:=ClassSigns,SignPhi:=SignPhi) : H in Xsubs];
 > sdat1 := SequenceToSet(dat1); #sdat1;
 104
-> // 
 > msdat1 := SequenceToMultiset(dat1);
-> dat1_dups := [<x,n> : x in sdat1 | n gt 1 where n is Multiplicity(msdat1,x)]\
-;
+> dat1_dups := [<x,n> : x in sdat1 | n gt 1 where n is Multiplicity(msdat1,x)];
 > {* x[2] : x in dat1_dups *};
 {* 2^^11, 3^^4, 4^^4, 5^^5, 6, 7, 8^^2, 9, 12, 21, 29, 34 *}
-> // 
 > 
-> // how many subgroups have same distribution of conjugacy classes, i.e., are\
- Gassmann-equivalent?
+> // how many subgroups have same distribution of conjugacy classes, i.e., are Gassmann-equivalent?
 > dat2 := [GSpGassmannDistribution(H : CCs:=CCs,phi:=phi) : H in Xsubs];
 > sdat2 := SequenceToSet(dat2); #sdat2;
 230
-> // 230
 > msdat2 := SequenceToMultiset(dat2);
-> dat2_dups := [<x,n> : x in sdat2 | n gt 1 where n is Multiplicity(msdat2,x)]\
-;
-> Gassmanndups_lbls := [L[[i : i in [1..#dat2] | dat2[i] eq dat]] : dat in Set\
-(dat2) | Multiplicity(dat2,dat) gt 1];
+> dat2_dups := [<x,n> : x in sdat2 | n gt 1 where n is Multiplicity(msdat2,x)];
+> Gassmanndups_lbls := [L[[i : i in [1..#dat2] | dat2[i] eq dat]] : dat in Set(dat2) | Multiplicity(dat2,dat) gt 1];
 > {*#x : x in Gassmanndups_lbls *};
 {* 2^^38, 3^^3, 4^^2 *}
-> // {* 2^^38, 3^^3, 4^^2 *}
 > Gassmanndups_lbls;
 [
-[ 3.2160.9, 3.2160.10 ],
-[ 3.8640.12, 3.8640.13 ],
-[ 3.720.4, 3.720.5 ],
-[ 3.2880.3, 3.2880.7 ],
-[ 3.17280.4, 3.17280.6, 3.17280.9 ],
-[ 3.80.1, 3.80.2 ],
-[ 3.1920.1, 3.1920.5 ],
-[ 3.640.1, 3.640.2, 3.640.3, 3.640.4 ],
-[ 3.960.2, 3.960.4 ],
-[ 3.320.1, 3.320.2, 3.320.5, 3.320.6 ],
-[ 3.6480.13, 3.6480.17 ],
-[ 3.2880.6, 3.2880.10 ],
-[ 3.1920.4, 3.1920.7 ],
-[ 3.5760.2, 3.5760.5 ],
-[ 3.5760.9, 3.5760.13 ],
-[ 3.2880.5, 3.2880.9 ],
-[ 3.480.3, 3.480.5 ],
-[ 3.2160.5, 3.2160.6 ],
-[ 3.6480.14, 3.6480.15 ],
-[ 3.2880.4, 3.2880.8 ],
-[ 3.6480.3, 3.6480.16 ],
-[ 3.2880.13, 3.2880.17 ],
-[ 3.2160.21, 3.2160.23 ],
-[ 3.17280.2, 3.17280.7, 3.17280.8 ],
-[ 3.17280.1, 3.17280.5 ],
-[ 3.240.6, 3.240.7 ],
-[ 3.8640.2, 3.8640.4 ],
-[ 3.2880.1, 3.2880.2 ],
-[ 3.8640.16, 3.8640.17 ],
-[ 3.3240.6, 3.3240.7 ],
-[ 3.8640.9, 3.8640.11 ],
-[ 3.5760.1, 3.5760.10 ],
-[ 3.2160.22, 3.2160.24 ],
-[ 3.960.1, 3.960.3 ],
 [ 3.240.1, 3.240.2 ],
-[ 3.5760.3, 3.5760.6, 3.5760.11 ],
-[ 3.8640.8, 3.8640.10 ],
-[ 3.4320.5, 3.4320.7 ],
-[ 3.1920.2, 3.1920.6 ],
-[ 3.5760.4, 3.5760.12 ],
-[ 3.8640.14, 3.8640.15 ],
+[ 3.2160.21, 3.2160.23 ],
+[ 3.640.1, 3.640.2, 3.640.3, 3.640.4 ],
+[ 3.5760.1, 3.5760.10 ],
+[ 3.1920.1, 3.1920.5 ],
+[ 3.240.6, 3.240.7 ],
 [ 3.320.3, 3.320.4 ],
-[ 3.12960.5, 3.12960.11 ]
+[ 3.6480.3, 3.6480.16 ],
+[ 3.720.4, 3.720.5 ],
+[ 3.8640.8, 3.8640.10 ],
+[ 3.5760.4, 3.5760.12 ],
+[ 3.480.3, 3.480.5 ],
+[ 3.960.2, 3.960.4 ],
+[ 3.8640.16, 3.8640.17 ],
+[ 3.1920.4, 3.1920.7 ],
+[ 3.80.1, 3.80.2 ],
+[ 3.6480.14, 3.6480.15 ],
+[ 3.2880.13, 3.2880.17 ],
+[ 3.17280.4, 3.17280.6, 3.17280.9 ],
+[ 3.2160.5, 3.2160.6 ],
+[ 3.2880.5, 3.2880.9 ],
+[ 3.8640.12, 3.8640.13 ],
+[ 3.2880.3, 3.2880.7 ],
+[ 3.5760.9, 3.5760.13 ],
+[ 3.2880.6, 3.2880.10 ],
+[ 3.2880.4, 3.2880.8 ],
+[ 3.17280.1, 3.17280.5 ],
+[ 3.2880.1, 3.2880.2 ],
+[ 3.17280.2, 3.17280.7, 3.17280.8 ],
+[ 3.1920.2, 3.1920.6 ],
+[ 3.3240.6, 3.3240.7 ],
+[ 3.960.1, 3.960.3 ],
+[ 3.8640.2, 3.8640.4 ],
+[ 3.320.1, 3.320.2, 3.320.5, 3.320.6 ],
+[ 3.12960.5, 3.12960.11 ],
+[ 3.6480.13, 3.6480.17 ],
+[ 3.8640.9, 3.8640.11 ],
+[ 3.4320.5, 3.4320.7 ],
+[ 3.8640.14, 3.8640.15 ],
+[ 3.5760.2, 3.5760.5 ],
+[ 3.2160.22, 3.2160.24 ],
+[ 3.2160.9, 3.2160.10 ],
+[ 3.5760.3, 3.5760.6, 3.5760.11 ]
 ]
-> // These are the Gassmann-equivalent subgroups that need to be distinguished\
-.
-> /*
-> [
-> [ 3.2880.5, 3.2880.9 ],
-> [ 3.6480.16, 3.6480.3 ],
-> [ 3.17280.2, 3.17280.7, 3.17280.8 ],
-> [ 3.8640.2, 3.8640.4 ],
-> [ 3.5760.4, 3.5760.12 ],
-> [ 3.17280.4, 3.17280.6, 3.17280.9 ],
-> [ 3.320.1, 3.320.2, 3.320.5, 3.320.6 ],
-> [ 3.5760.3, 3.5760.6, 3.5760.11 ],
-> [ 3.8640.12, 3.8640.13 ],
-> [ 3.1920.2, 3.1920.6 ],
-> [ 3.2160.22, 3.2160.24 ],
-> [ 3.8640.14, 3.8640.15 ],
-> [ 3.960.1, 3.960.3 ],
-> [ 3.4320.7, 3.4320.5 ],
-> [ 3.8640.8, 3.8640.10 ],
-> [ 3.2880.4, 3.2880.8 ],
-> [ 3.2160.21, 3.2160.23 ],
-> [ 3.2880.1, 3.2880.2 ],
-> [ 3.2160.5, 3.2160.6 ],
-> [ 3.1920.4, 3.1920.7 ],
-> [ 3.480.3, 3.480.5 ],
-> [ 3.5760.9, 3.5760.13 ],
-> [ 3.640.2, 3.640.3, 3.640.4, 3.640.1 ],
-> [ 3.720.4, 3.720.5 ],
-> [ 3.320.3, 3.320.4 ],
-> [ 3.5760.2, 3.5760.5 ],
-> [ 3.960.2, 3.960.4 ],
-> [ 3.2880.6, 3.2880.10 ],
-> [ 3.80.1, 3.80.2 ],
-> [ 3.2160.10, 3.2160.9 ],
-> [ 3.3240.6, 3.3240.7 ],
-> [ 3.17280.1, 3.17280.5 ],
-> [ 3.6480.14, 3.6480.15 ],
-> [ 3.240.1, 3.240.2 ],
-> [ 3.240.6, 3.240.7 ],
-> [ 3.6480.13, 3.6480.17 ],
-> [ 3.8640.16, 3.8640.17 ],
-> [ 3.5760.1, 3.5760.10 ],
-> [ 3.8640.9, 3.8640.11 ],
-> [ 3.12960.5, 3.12960.11 ],
-> [ 3.2880.13, 3.2880.17 ],
-> [ 3.2880.3, 3.2880.7 ],
-> [ 3.1920.1, 3.1920.5 ]
-> ]
-> */
+> // These are the Gassmann-equivalent subgroups that need to be distinguished.
 > 
-> ////////////////////////////////////////////////////////////////////////////\
-////////////////
-> // distinguishing using dimension of fixed subspace, i.e., dimension of 3-to\
-rsion over Q. //
-> ////////////////////////////////////////////////////////////////////////////\
-////////////////
+> ////////////////////////////////////////////////////////////////////////////////////////////
+> // distinguishing using dimension of fixed subspace, i.e., dimension of 3-torsion over Q. //
+> ////////////////////////////////////////////////////////////////////////////////////////////
 > 
-> maxptsoverQ := [[max_pts_over_ext(H,1) where H is X[y]`subgroup : y in x] : \
-x in Gassmanndups_lbls];
+> maxptsoverQ := [[max_pts_over_ext(H,1) where H is X[y]`subgroup : y in x] : x in Gassmanndups_lbls];
 > maxptsoverQ;
 [
-[ 0, 0 ],
-[ 0, 0 ],
-[ 1, 0 ],
-[ 1, 0 ],
-[ 2, 1, 0 ],
 [ 1, 0 ],
 [ 1, 0 ],
 [ 1, 1, 0, 0 ],
+[ 2, 0 ],
 [ 1, 0 ],
+[ 0, 0 ],
+[ 0, 0 ],
+[ 0, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 2, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 0, 0 ],
+[ 0, 0 ],
+[ 2, 1, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 0, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 1, 0 ],
+[ 2, 1 ],
+[ 1, 0 ],
+[ 2, 1, 0 ],
+[ 2, 0 ],
+[ 0, 0 ],
+[ 1, 0 ],
+[ 0, 0 ],
 [ 1, 0, 0, 0 ],
 [ 0, 0 ],
+[ 0, 0 ],
+[ 1, 0 ],
 [ 1, 0 ],
 [ 1, 0 ],
 [ 1, 1 ],
 [ 1, 0 ],
-[ 1, 0 ],
-[ 1, 0 ],
-[ 1, 0 ],
 [ 0, 0 ],
-[ 1, 0 ],
-[ 0, 0 ],
-[ 0, 0 ],
-[ 1, 0 ],
-[ 2, 1, 0 ],
-[ 2, 1 ],
-[ 0, 0 ],
-[ 0, 0 ],
-[ 1, 0 ],
-[ 1, 0 ],
-[ 0, 0 ],
-[ 1, 0 ],
-[ 2, 0 ],
-[ 1, 0 ],
-[ 1, 0 ],
-[ 1, 0 ],
-[ 2, 1, 0 ],
-[ 1, 0 ],
-[ 1, 0 ],
-[ 2, 0 ],
-[ 2, 0 ],
-[ 1, 0 ],
-[ 0, 0 ],
-[ 0, 0 ]
+[ 2, 1, 0 ]
 ]
-> /*
-> [
-> [ 1, 0 ],
-> [ 0, 0 ],
-> [ 2, 1, 0 ],
-> [ 0, 0 ],
-> [ 2, 0 ],
-> [ 2, 1, 0 ],
-> [ 1, 0, 0, 0 ],
-> [ 2, 1, 0 ],
-> [ 0, 0 ],
-> [ 2, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 0, 1 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0, 0, 1 ],
-> [ 1, 0 ],
-> [ 0, 0 ],
-> [ 1, 1 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ],
-> [ 0, 0 ],
-> [ 0, 0 ],
-> [ 2, 1 ],
-> [ 0, 0 ],
-> [ 1, 0 ],
-> [ 0, 0 ],
-> [ 0, 0 ],
-> [ 1, 0 ],
-> [ 2, 0 ],
-> [ 1, 0 ],
-> [ 0, 0 ],
-> [ 0, 0 ],
-> [ 1, 0 ],
-> [ 1, 0 ]
-> ]
-> */
-> 
-> Gassmanndups_lbls1 := [Gassmanndups_lbls[i] : i in [1..#Gassmanndups_lbls] |\
- #maxptsoverQ[i] ne #Set(maxptsoverQ[i])];
+> Gassmanndups_lbls1 := [Gassmanndups_lbls[i] : i in [1..#Gassmanndups_lbls] | #maxptsoverQ[i] ne #Set(maxptsoverQ[i])];
 > {*#x : x in Gassmanndups_lbls1 *};
 {* 2^^12, 4^^2 *}
-> // {* 2^^12, 4^^2 *}
 > Gassmanndups_lbls1;
 [
-[ 3.2160.9, 3.2160.10 ],
-[ 3.8640.12, 3.8640.13 ],
 [ 3.640.1, 3.640.2, 3.640.3, 3.640.4 ],
+[ 3.240.6, 3.240.7 ],
+[ 3.320.3, 3.320.4 ],
+[ 3.6480.3, 3.6480.16 ],
+[ 3.6480.14, 3.6480.15 ],
+[ 3.2880.13, 3.2880.17 ],
+[ 3.8640.12, 3.8640.13 ],
+[ 3.3240.6, 3.3240.7 ],
+[ 3.8640.2, 3.8640.4 ],
 [ 3.320.1, 3.320.2, 3.320.5, 3.320.6 ],
+[ 3.12960.5, 3.12960.11 ],
 [ 3.6480.13, 3.6480.17 ],
 [ 3.5760.2, 3.5760.5 ],
-[ 3.6480.14, 3.6480.15 ],
-[ 3.6480.3, 3.6480.16 ],
-[ 3.2880.13, 3.2880.17 ],
-[ 3.240.6, 3.240.7 ],
-[ 3.8640.2, 3.8640.4 ],
-[ 3.3240.6, 3.3240.7 ],
-[ 3.320.3, 3.320.4 ],
-[ 3.12960.5, 3.12960.11 ]
+[ 3.2160.9, 3.2160.10 ]
 ]
-> // These are the Gassmann-equivalent groups that are not distinguished by di\
-mension of fixed subspace
-> /*
-> [
-> [ 3.6480.16, 3.6480.3 ],
-> [ 3.8640.2, 3.8640.4 ],
-> [ 3.320.1, 3.320.2, 3.320.5, 3.320.6 ],
-> [ 3.8640.12, 3.8640.13 ],
-> [ 3.640.2, 3.640.3, 3.640.4, 3.640.1 ],
-> [ 3.320.3, 3.320.4 ],
-> [ 3.5760.2, 3.5760.5 ],
-> [ 3.2160.10, 3.2160.9 ],
-> [ 3.3240.6, 3.3240.7 ],
-> [ 3.6480.14, 3.6480.15 ],
-> [ 3.240.6, 3.240.7 ],
-> [ 3.6480.13, 3.6480.17 ],
-> [ 3.12960.5, 3.12960.11 ],
-> [ 3.2880.13, 3.2880.17 ]
-> ]
-> */
+> // These are the Gassmann-equivalent groups that are not distinguished by dimension of fixed subspace
 > 
-> ////////////////////////////////////////////////////////////////////////////\
-/////////////////
-> // distinguishing using maximum dimension of subspace fixed by index-n subgr\
-oup for n <= 3 //
-> // or the subspace fixed by intersection with Sp(4,F_3)                     \
-               //
-> // i.e., using maximum dimension of 3-torsion over a degree-n number field o\
-r Q(zeta_3).   //
-> ////////////////////////////////////////////////////////////////////////////\
-/////////////////
+> /////////////////////////////////////////////////////////////////////////////////////////////
+> // distinguishing using maximum dimension of subspace fixed by index-n subgroup for n <= 3 //
+> // or the subspace fixed by intersection with Sp(4,F_3)                                    //
+> // i.e., using maximum dimension of 3-torsion over a degree-n number field or Q(zeta_3).   //
+> /////////////////////////////////////////////////////////////////////////////////////////////
+> 
 > SG := Symp(4,3);
-> maxptsoversmalldegextns := [[<max_pts_over_ext(H,n) : n in [1..3]> cat <max_\
-pts_over_ext(H meet SG,1)> where H is X[y]`subgroup : y in x] : x in Gassmannd\
-ups_lbls1];
+> maxptsoversmalldegextns := [[<max_pts_over_ext(H,n) : n in [1..3]> cat <max_pts_over_ext(H meet SG,1)> where H is X[y]`subgroup : y in x] : x in Gassmanndups_lbls1];
 > maxptsoversmalldegextns;
 [
-[ <0, 1, 0, 0>, <0, 1, 0, 0> ],
-[ <0, 2, 0, 0>, <0, 1, 0, 0> ],
 [ <1, 1, 2, 1>, <1, 1, 1, 1>, <0, 1, 0, 1>, <0, 1, 1, 1> ],
+[ <0, 1, 0, 0>, <0, 1, 0, 0> ],
+[ <0, 1, 0, 0>, <0, 1, 0, 0> ],
+[ <0, 0, 0, 0>, <0, 0, 0, 0> ],
+[ <0, 0, 0, 0>, <0, 0, 0, 0> ],
+[ <0, 2, 0, 0>, <0, 1, 0, 0> ],
+[ <0, 2, 0, 0>, <0, 1, 0, 0> ],
+[ <0, 0, 0, 0>, <0, 0, 0, 0> ],
+[ <0, 2, 0, 0>, <0, 1, 0, 0> ],
 [ <1, 1, 1, 1>, <0, 1, 0, 1>, <0, 1, 1, 0>, <0, 1, 0, 0> ],
 [ <0, 0, 0, 0>, <0, 0, 0, 0> ],
+[ <0, 0, 0, 0>, <0, 0, 0, 0> ],
 [ <1, 2, 2, 2>, <1, 2, 1, 2> ],
-[ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-[ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-[ <0, 2, 0, 0>, <0, 1, 0, 0> ],
-[ <0, 1, 0, 0>, <0, 1, 0, 0> ],
-[ <0, 2, 0, 0>, <0, 1, 0, 0> ],
-[ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-[ <0, 1, 0, 0>, <0, 1, 0, 0> ],
-[ <0, 0, 0, 0>, <0, 0, 0, 0> ]
+[ <0, 1, 0, 0>, <0, 1, 0, 0> ]
 ]
-> /*
-> [
-> [ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-> [ <0, 2, 0, 0>, <0, 1, 0, 0> ],
-> [ <1, 1, 1, 1>, <0, 1, 0, 1>, <0, 1, 1, 0>, <0, 1, 0, 0> ],
-> [ <0, 2, 0, 0>, <0, 1, 0, 0> ],
-> [ <1, 1, 1, 1>, <0, 1, 0, 1>, <0, 1, 1, 1>, <1, 1, 2, 1> ],
-> [ <0, 1, 0, 0>, <0, 1, 0, 0> ],
-> [ <1, 2, 2, 2>, <1, 2, 1, 2> ],
-> [ <0, 1, 0, 0>, <0, 1, 0, 0> ],
-> [ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-> [ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-> [ <0, 1, 0, 0>, <0, 1, 0, 0> ],
-> [ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-> [ <0, 0, 0, 0>, <0, 0, 0, 0> ],
-> [ <0, 2, 0, 0>, <0, 1, 0, 0> ]
-> ]
-> */
-> 
-> Gassmanndups_lbls2 := [Gassmanndups_lbls1[i] : i in [1..#Gassmanndups_lbls1]\
- | #maxptsoversmalldegextns[i] ne #Set(maxptsoversmalldegextns[i])];
+> Gassmanndups_lbls2 := [Gassmanndups_lbls1[i] : i in [1..#Gassmanndups_lbls1] | #maxptsoversmalldegextns[i] ne #Set(maxptsoversmalldegextns[i])];
 > {*#x : x in Gassmanndups_lbls2 *};
 {* 2^^8 *}
-> // {* 2^^8 *}
 > Gassmanndups_lbls2;
 [
-[ 3.2160.9, 3.2160.10 ],
-[ 3.6480.13, 3.6480.17 ],
-[ 3.6480.14, 3.6480.15 ],
-[ 3.6480.3, 3.6480.16 ],
 [ 3.240.6, 3.240.7 ],
-[ 3.3240.6, 3.3240.7 ],
 [ 3.320.3, 3.320.4 ],
-[ 3.12960.5, 3.12960.11 ]
+[ 3.6480.3, 3.6480.16 ],
+[ 3.6480.14, 3.6480.15 ],
+[ 3.3240.6, 3.3240.7 ],
+[ 3.12960.5, 3.12960.11 ],
+[ 3.6480.13, 3.6480.17 ],
+[ 3.2160.9, 3.2160.10 ]
 ]
 > // These are the Gassmann-equivalent groups that are not distinguished by
 > // dimension of fixed subspace,
 > // dimension of subspace fixed by intersection with Sp(4,F_3)
 > // or maximum dimension of subspace fixed by an index-n subgroup
-> /*
-> [
-> [ 3.6480.16, 3.6480.3 ],
-> [ 3.320.3, 3.320.4 ],
-> [ 3.2160.10, 3.2160.9 ],
-> [ 3.3240.6, 3.3240.7 ],
-> [ 3.6480.14, 3.6480.15 ],
-> [ 3.240.6, 3.240.7 ],
-> [ 3.6480.13, 3.6480.17 ],
-> [ 3.12960.5, 3.12960.11 ]
-> ]
-> */
 > 
-> ////////////////////////////////////////////////////////////////////////////\
-///////////////////////
-> // distinguishing using maximum dimension of subspace fixed by index-n subgr\
-oup for n = 6, 8, 12 //
-> // i.e., using maximum dimension of 3-torsion over a degree-n number field. \
-                     //
-> ////////////////////////////////////////////////////////////////////////////\
-///////////////////////
+> ///////////////////////////////////////////////////////////////////////////////////////////////////
+> // distinguishing using maximum dimension of subspace fixed by index-n subgroup for n = 6, 8, 12 //
+> // i.e., using maximum dimension of 3-torsion over a degree-n number field.                      //
+> ///////////////////////////////////////////////////////////////////////////////////////////////////
 > 
-> Gassmanndups_nonGLconjugate_lbls := [x : x in Gassmanndups_lbls2 | not IsCon\
-jugate(GL(4,Integers(3)),H1,H2) where H1, H2 is Explode([X[y]`subgroup : y in \
-x])];
+> Gassmanndups_nonGLconjugate_lbls := [x : x in Gassmanndups_lbls2 | not IsConjugate(GL(4,Integers(3)),H1,H2) where H1, H2 is Explode([X[y]`subgroup : y in x])];
 > Gassmanndups_nonGLconjugate_lbls;
 [
-[ 3.2160.9, 3.2160.10 ],
 [ 3.240.6, 3.240.7 ],
-[ 3.320.3, 3.320.4 ]
+[ 3.320.3, 3.320.4 ],
+[ 3.2160.9, 3.2160.10 ]
 ]
-> /*
-> [
-> [ 3.320.3, 3.320.4 ],
-> [ 3.2160.10, 3.2160.9 ],
-> [ 3.240.6, 3.240.7 ]
-> ]
-> */
 > largedegrees := [6,8,12];
-> maxptsoverlargedegextns := [[<max_pts_over_ext(H,n) : n in largedegrees> whe\
-re H is X[y]`subgroup : y in x] : x in Gassmanndups_nonGLconjugate_lbls];
+> maxptsoverlargedegextns := [[<max_pts_over_ext(H,n) : n in largedegrees> where H is X[y]`subgroup : y in x] : x in Gassmanndups_nonGLconjugate_lbls];
 > maxptsoverlargedegextns;
 [
-[ <1, 1, 2>, <1, 2, 2> ],
 [ <0, 1, 0>, <0, 1, 1> ],
-[ <2, 0, 2>, <1, 0, 2> ]
+[ <2, 0, 2>, <1, 0, 2> ],
+[ <1, 1, 2>, <1, 2, 2> ]
 ]
-> /*
-> [
-> [ <2, 0, 2>, <1, 0, 2> ],
-> [ <1, 2, 2>, <1, 1, 2> ],
-> [ <0, 1, 0>, <0, 1, 1> ]
-> ]
-> */
-> groupid := [[IdentifyGroup(X[y]`subgroup) : y in x] : x in Gassmanndups_nonG\
-Lconjugate_lbls];
+> 
+> groupid := [[IdentifyGroup(X[y]`subgroup) : y in x] : x in Gassmanndups_nonGLconjugate_lbls];
 > groupid;
 [
-[ <48, 17>, <48, 17> ],
 [ <432, 520>, <432, 520> ],
-[ <324, 69>, <324, 77> ]
+[ <324, 69>, <324, 77> ],
+[ <48, 17>, <48, 17> ]
 ]
-> /*
-> [
-> [ <324, 69>, <324, 77> ],
-> [ <48, 17>, <48, 17> ],
-> [ <432, 520>, <432, 520> ]
-> ]
-> */
+> 
 > negativeone := G!ScalarMatrix(4,-1);
 > negativeonesub := sub<G|negativeone>;
-> projgroupid := [[<y,IdentifyGroup(quo<H|negativeonesub>)> : y in x | negativ\
-eone in H where H is X[y]`subgroup] : x in Gassmanndups_nonGLconjugate_lbls];
+> projgroupid := [[<y,IdentifyGroup(quo<H|negativeonesub>)> : y in x | negativeone in H where H is X[y]`subgroup] : x in Gassmanndups_nonGLconjugate_lbls];
 > projgroupid;
 [
 [],
-[],
-[ <"3.320.3", <162, 11>>, <"3.320.4", <162, 19>> ]
+[ <"3.320.3", <162, 11>>, <"3.320.4", <162, 19>> ],
+[]
 ]
-> /*
-> [
-> [ <"3.320.3", <162, 11>>, <"3.320.4", <162, 19>> ],
-> [],
-> []
-> ]
-> */
 > 
-> ////////////////////////////////////////////////////////////////////////////\
-/////////////////////////////
-> // The remaining group are GL-conjugate. So they cannot be distinguished usi\
-ng these methods any more. //
-> ////////////////////////////////////////////////////////////////////////////\
-/////////////////////////////
+> /////////////////////////////////////////////////////////////////////////////////////////////////////////
+> // The remaining group are GL-conjugate. So they cannot be distinguished using these methods any more. //
+> /////////////////////////////////////////////////////////////////////////////////////////////////////////
 > 
-> Gassmanndups_GLconjugate_lbls := [x : x in Gassmanndups_lbls2 | IsConjugate(\
-GL(4,Integers(3)),H1,H2) where H1, H2 is Explode([X[y]`subgroup : y in x])];
+> Gassmanndups_GLconjugate_lbls := [x : x in Gassmanndups_lbls2 | IsConjugate(GL(4,Integers(3)),H1,H2) where H1, H2 is Explode([X[y]`subgroup : y in x])];
 > Gassmanndups_GLconjugate_lbls;
 [
-[ 3.6480.13, 3.6480.17 ],
-[ 3.6480.14, 3.6480.15 ],
 [ 3.6480.3, 3.6480.16 ],
+[ 3.6480.14, 3.6480.15 ],
 [ 3.3240.6, 3.3240.7 ],
-[ 3.12960.5, 3.12960.11 ]
+[ 3.12960.5, 3.12960.11 ],
+[ 3.6480.13, 3.6480.17 ]
 ]
-> /*
-> [
-> [ 3.6480.16, 3.6480.3 ],
-> [ 3.3240.6, 3.3240.7 ],
-> [ 3.6480.14, 3.6480.15 ],
-> [ 3.6480.13, 3.6480.17 ],
-> [ 3.12960.5, 3.12960.11 ]
-> ]
-> */
 > 
-> ////////////////////////////////////////////////////////////////////////////\
-//////////////////////////////////
-> // Data of isotropic and non-isotropic 2-dimensional subspaces fixed by inde\
-x n-subgroups                   //
-> // How useful is it for distinguishing?                                     \
-                                //
-> // Not useful for Gassmann-equivalent GL-conjugate pairs, but can be useful \
-for non-GL-conjugate subgroups. //
-> ////////////////////////////////////////////////////////////////////////////\
-//////////////////////////////////
-> twodimsubs := [[[<n,twodimfixedspaces(X[y]`subgroup,n),twodimfixedspaces(X[y\
-]`subgroup,n:normal:=true)> : n in Divisors(ExactQuotient(#G,X[y]`index))] : y\
- in x] : x in Gassmanndups_GLconjugate_lbls];
+> //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+> // Data of isotropic and non-isotropic 2-dimensional subspaces fixed by index n-subgroups                   //
+> // How useful is it for distinguishing?                                                                     //
+> // Not useful for Gassmann-equivalent GL-conjugate pairs, but can be useful for non-GL-conjugate subgroups. //
+> //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+> 
+> twodimsubs := [[[<n,twodimfixedspaces(X[y]`subgroup,n),twodimfixedspaces(X[y]`subgroup,n:normal:=true)> : n in Divisors(ExactQuotient(#G,X[y]`index))] : y in x] : x in Gassmanndups_GLcon\
+jugate_lbls];
 > assert { x[1] eq x[2] : x in twodimsubs } eq {true};
-> // This data can distinguish the three Gassmann-equivalent non-GL-conjugate \
-pairs, where we had to
-> // go up to 6,8,12 degree extensions, without going up to such large degree \
-extensions.
-> fixedsubs := [[[<n,fixedspaces(X[y]`subgroup,n),fixedspaces(X[y]`subgroup,n:\
-normal:=true)> : n in Divisors(ExactQuotient(#G,X[y]`index)) | n le 12] : y in\
- x] : x in Gassmanndups_nonGLconjugate_lbls];
+> // This data can distinguish the three Gassmann-equivalent non-GL-conjugate pairs, where we had to
+> // go up to 6,8,12 degree extensions, without going up to such large degree extensions.
+> fixedsubs := [[[<n,fixedspaces(X[y]`subgroup,n),fixedspaces(X[y]`subgroup,n:normal:=true)> : n in Divisors(ExactQuotient(#G,X[y]`index)) | n le 12] : y in x] : x in Gassmanndups_nonGLcon\
+jugate_lbls];
 > assert {* x[1] eq x[2] : x in fixedsubs *} eq {* false^^3 *};
 > for x in fixedsubs do
 for>     for i := 1 to #x[1] do
@@ -514,24 +285,17 @@ for|for>         break;
 for|for>     end for;
 for> end for;
 <4, {* 0^^2, 1 *}, {* 1 *}>, <4, {* 0, 1^^2 *}, {* 1 *}>
-<4, {* 0^^2, 1 *}, {* 1 *}>, <4, {* 0, 1^^2 *}, {* 1 *}>
 <3, {* 0^^2 *}, {* 0 *}>, <3, {* 0^^4 *}, {* *}>
-> /*
-> <3, {* 0^^4 *}, {* 0 *}>, <3, {* 0^^12 *}, {* *}>
-> <4, {* 0^^2, 1^^3 *}, {* 1 *}>, <4, {* 0^^4, 1 *}, {* 1 *}>
-> <4, {* 0^^4, 1 *}, {* 1 *}>, <4, {* 0^^2, 1^^3 *}, {* 1 *}>
-> */
+<4, {* 0^^2, 1 *}, {* 1 *}>, <4, {* 0, 1^^2 *}, {* 1 *}>
 > 
 > 
-> // does the outer automorphism of GSp(4,F_3) swap these Gassmann-equivalent \
-GL-conjugate pairs?
+> 
+> // does the outer automorphism of GSp(4,F_3) swap these Gassmann-equivalent GL-conjugate pairs?
 > // No. It fixes each of them.
 > A := AutomorphismGroup(G); assert #A eq #G;
 > assert exists(ou){g : g in Generators(A) | not IsInner(g)};
-> assert { IsConjugate(G,X[x[1]]`subgroup,ou(X[x[2]]`subgroup)) : x in Gassman\
-ndups_GLconjugate_lbls } eq {false};
-> assert Gassmanndups_GLconjugate_lbls eq [[GSpLookupLabel(X,ou(X[y]`subgroup)\
-) : y in x] : x in Gassmanndups_GLconjugate_lbls];
+> assert { IsConjugate(G,X[x[1]]`subgroup,ou(X[x[2]]`subgroup)) : x in Gassmanndups_GLconjugate_lbls } eq {false};
+> assert Gassmanndups_GLconjugate_lbls eq [[GSpLookupLabel(X,ou(X[y]`subgroup)) : y in x] : x in Gassmanndups_GLconjugate_lbls];
 > 
 > 
 > //////////////////////////////////////
@@ -540,97 +304,70 @@ ndups_GLconjugate_lbls } eq {false};
 > 
 > #Gassmanndups_lbls1;
 14
-> maxptsoverextns := [[<max_pts_over_ext(H meet SG,1)> cat <max_pts_over_ext(H\
-,n) : n in [1,2,3,6,8,12]> where H is X[y]`subgroup : y in x] : x in Gassmannd\
-ups_lbls1];
+> maxptsoverextns := [[<max_pts_over_ext(H meet SG,1)> cat <max_pts_over_ext(H,n) : n in [1,2,3,6,8,12]> where H is X[y]`subgroup : y in x] : x in Gassmanndups_lbls1];
 > maxptsoverextns;
 [
-[ <0, 0, 1, 0, 1, 1, 2>, <0, 0, 1, 0, 1, 2, 2> ],
-[ <0, 0, 2, 0, 2, 0, 4>, <0, 0, 1, 0, 2, 0, 4> ],
 [ <1, 1, 1, 2, 2, 0, 0>, <1, 1, 1, 1, 2, 0, 0>, <1, 0, 1, 0, 2, 0, 0>, <1, 0, 1, 1, 2, 0, 0> ],
-[ <1, 1, 1, 1, 2, 0, 2>, <1, 0, 1, 0, 1, 0, 2>, <0, 0, 1, 1, 2, 0, 2>, <0, 0, 1, 0, 1, 0, 2> ],
-[ <0, 0, 0, 0, 0, 2, 0>, <0, 0, 0, 0, 0, 2, 0> ],
-[ <2, 1, 2, 2, 3, 0, 0>, <2, 1, 2, 1, 3, 0, 0> ],
+[ <0, 0, 1, 0, 0, 1, 0>, <0, 0, 1, 0, 0, 1, 1> ],
+[ <0, 0, 1, 0, 2, 0, 2>, <0, 0, 1, 0, 1, 0, 2> ],
 [ <0, 0, 0, 0, 0, 2, 0>, <0, 0, 0, 0, 0, 2, 0> ],
 [ <0, 0, 0, 0, 0, 2, 0>, <0, 0, 0, 0, 0, 2, 0> ],
 [ <0, 0, 2, 0, 2, 0, 3>, <0, 0, 1, 0, 2, 0, 3> ],
-[ <0, 0, 1, 0, 0, 1, 0>, <0, 0, 1, 0, 0, 1, 1> ],
 [ <0, 0, 2, 0, 2, 0, 4>, <0, 0, 1, 0, 2, 0, 4> ],
 [ <0, 0, 0, 0, 0, 1, 0>, <0, 0, 0, 0, 0, 1, 0> ],
-[ <0, 0, 1, 0, 2, 0, 2>, <0, 0, 1, 0, 1, 0, 2> ],
-[ <0, 0, 0, 0, 0, 4, 0>, <0, 0, 0, 0, 0, 4, 0> ]
+[ <0, 0, 2, 0, 2, 0, 4>, <0, 0, 1, 0, 2, 0, 4> ],
+[ <1, 1, 1, 1, 2, 0, 2>, <1, 0, 1, 0, 1, 0, 2>, <0, 0, 1, 1, 2, 0, 2>, <0, 0, 1, 0, 1, 0, 2> ],
+[ <0, 0, 0, 0, 0, 4, 0>, <0, 0, 0, 0, 0, 4, 0> ],
+[ <0, 0, 0, 0, 0, 2, 0>, <0, 0, 0, 0, 0, 2, 0> ],
+[ <2, 1, 2, 2, 3, 0, 0>, <2, 1, 2, 1, 3, 0, 0> ],
+[ <0, 0, 1, 0, 1, 1, 2>, <0, 0, 1, 0, 1, 2, 2> ]
 ]
-> /*
-> [
-> [ <0, 0, 0, 0, 0, 2, 0>, <0, 0, 0, 0, 0, 2, 0> ],
-> [ <0, 0, 2, 0, 2, 0, 4>, <0, 0, 1, 0, 2, 0, 4> ],
-> [ <1, 1, 1, 1, 2, 0, 2>, <1, 0, 1, 0, 1, 0, 2>, <0, 0, 1, 1, 2, 0, 2>, <0, 0\
-, 1, 0, 1, 0, 2> ],
-> [ <0, 0, 2, 0, 2, 0, 4>, <0, 0, 1, 0, 2, 0, 4> ],
-> [ <1, 1, 1, 1, 2, 0, 0>, <1, 0, 1, 0, 2, 0, 0>, <1, 0, 1, 1, 2, 0, 0>, <1, 1\
-, 1, 2, 2, 0, 0> ],
-> [ <0, 0, 1, 0, 2, 0, 2>, <0, 0, 1, 0, 1, 0, 2> ],
-> [ <2, 1, 2, 2, 3, 0, 0>, <2, 1, 2, 1, 3, 0, 0> ],
-> [ <0, 0, 1, 0, 1, 2, 2>, <0, 0, 1, 0, 1, 1, 2> ],
-> [ <0, 0, 0, 0, 0, 1, 0>, <0, 0, 0, 0, 0, 1, 0> ],
-> [ <0, 0, 0, 0, 0, 2, 0>, <0, 0, 0, 0, 0, 2, 0> ],
-> [ <0, 0, 1, 0, 0, 1, 0>, <0, 0, 1, 0, 0, 1, 1> ],
-> [ <0, 0, 0, 0, 0, 2, 0>, <0, 0, 0, 0, 0, 2, 0> ],
-> [ <0, 0, 0, 0, 0, 4, 0>, <0, 0, 0, 0, 0, 4, 0> ],
-> [ <0, 0, 2, 0, 2, 0, 3>, <0, 0, 1, 0, 2, 0, 3> ]
-> ]
-> */
-> inds := [i : i in [1..#maxptsoverextns] | #Set(maxptsoverextns[i]) eq #maxpt\
-soverextns[i]];
+> inds := [i : i in [1..#maxptsoverextns] | #Set(maxptsoverextns[i]) eq #maxptsoverextns[i]];
 > inds;
-[ 1, 2, 3, 4, 6, 9, 10, 11, 13 ]
-> // [ 2, 3, 4, 5, 6, 7, 8, 11, 14 ]
+[ 1, 2, 3, 6, 7, 9, 10, 13, 14 ]
 > 
-> s := "\\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label="\
-;
+> s := "\\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=";
 > 
 > for i in inds do
 for>     for j in [1..#Gassmanndups_lbls1[i]] do
 for|for>         lbl := Gassmanndups_lbls1[i][j];
 for|for>         lblwithlink := Sprintf("%o%o}{%o}", s, lbl, lbl);
-for|for>         gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in Generat\
-orsSequence(X[lbl]`subgroup)]; gens := gens[1..#gens-8];
-for|for>         dims := &cat[IntegerToString(n) cat "&" : n in maxptsoverextn\
-s[i][j]]; dims := dims[1..#dims-1];
+for|for>         gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in GeneratorsSequence(X[lbl]`subgroup)]; gens := gens[1..#gens-8];
+for|for>         dims := &cat[IntegerToString(n) cat "&" : n in maxptsoverextns[i][j]]; dims := dims[1..#dims-1];
 for|for>         printf "%o & %o & %o\\\\\n", lblwithlink, gens, dims;
 for|for>     end for;
 for>     printf "\\hline\n";
 for> end for;
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2160.9}{3.2160.9} & [ 0, 2, 2, 2, 2, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0 ]\newline[ 2, 0, 2, 0, 0, 2, 0, 2, 1, 1, 0, 1, 1, 1, 1, 0 ] & 0&0&1&0&1&1&2\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2160.10}{3.2160.10} & [ 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 0, 2, 2, 0, 2 ]\newline[ 1, 2, 0, 1, 2, 1, 1, 0, 1, 1, 1, 2, 1, 1, 2, 1 ] & 0&0&1&0&1&2&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.1}{3.640.1} & [ 1, 0, 1, 2, 2, 2, 1, 0, 2, 0, 0, 1, 0, 1, 2, 0 ]\newline[ 2, 0, 2, 2, 1, 0, 0, 1, 1, 1, 2, 2, 0, 1, 2, 0 ] & 1&1&1&2&2&0&0\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.2}{3.640.2} & [ 0, 1, 0, 2, 2, 1, 1, 2, 2, 1, 1, 1, 0, 2, 1, 2 ]\newline[ 0, 1, 1, 1, 2, 2, 1, 2, 2, 2, 1, 0, 0, 2, 1, 0 ]\newline[ 1, 0, 0, 0, 0, 0, 1, 0, 0, 2, 2, 0, 0, 0, 0, 1 ] & 1&1&1&1&2&0&0\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.3}{3.640.3} & [ 2, 2, 0, 1, 1, 0, 0, 2, 1, 2, 1, 1, 0, 2, 1, 0 ]\newline[ 0, 2, 2, 1, 2, 2, 0, 1, 2, 2, 0, 0, 0, 2, 1, 2 ] & 1&0&1&0&2&0&0\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.4}{3.640.4} & [ 0, 0, 1, 1, 2, 1, 1, 0, 2, 1, 1, 2, 0, 2, 1, 2 ]\newline[ 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 2, 0 ]\newline[ 1, 0, 0, 2, 2, 0, 2, 1, 2, 2, 0, 1, 0, 2, 1, 2 ] & 1&0&1&1&2&0&0\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.12}{3.8640.12} & [ 1, 2, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2 ]\newline[ 2, 1, 1, 2, 0, 1, 2, 1, 1, 1, 2, 2, 1, 1, 0, 1 ] & 0&0&2&0&2&0&4\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.13}{3.8640.13} & [ 2, 0, 2, 1, 0, 2, 1, 2, 2, 2, 2, 0, 2, 2, 0, 2 ]\newline[ 2, 2, 1, 1, 1, 1, 0, 1, 1, 2, 2, 1, 0, 1, 2, 1 ] & 0&0&1&0&2&0&4\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.240.6}{3.240.6} & [ 1, 0, 2, 2, 2, 2, 2, 2, 0, 0, 2, 0, 2, 0, 0, 2 ]\newline[ 0, 0, 2, 1, 1, 1, 2, 1, 0, 0, 2, 0, 1, 0, 1, 0 ] & 0&0&1&0&0&1&0\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.240.7}{3.240.7} & [ 2, 0, 1, 1, 0, 2, 0, 1, 0, 0, 2, 0, 1, 0, 2, 1 ]\newline[ 2, 0, 1, 2, 0, 1, 0, 2, 0, 0, 2, 0, 1, 0, 2, 2 ] & 0&0&1&0&0&1&1\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.1}{3.640.1} & [ 1, 0, 1, 1, 0, 1, 2, 1, 0, 0, 1, 0, 0, 0, 0, 1 ]\newline[ 0, 1, 2, 1, 2, 1, 1, 2, 0, 0, 0, 1, 0, 0, 2, 2 ] & 1&1&1&2&2&0&0\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.2}{3.640.2} & [ 2, 1, 0, 1, 2, 0, 1, 2, 0, 0, 2, 2, 0, 0, 1, 0 ]\newline[ 0, 2, 2, 2, 1, 2, 0, 2, 0, 0, 0, 1, 0, 0, 2, 2 ]\newline[ 1, 2, 1, 0, 0, 2, 1, 0, 0, 0, 1, 1, 0, 0, 0, 2 ] & 1&1&1&1&2&0&0\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.3}{3.640.3} & [ 1, 0, 2, 2, 0, 1, 0, 2, 0, 0, 2, 0, 0, 0, 0, 2 ]\newline[ 2, 1, 0, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 2, 0 ] & 1&0&1&0&2&0&0\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.640.4}{3.640.4} & [ 2, 1, 1, 1, 2, 0, 0, 1, 0, 0, 2, 2, 0, 0, 1, 0 ]\newline[ 1, 0, 2, 0, 1, 2, 0, 1, 0, 0, 1, 0, 0, 0, 2, 2 ]\newline[ 2, 1, 0, 1, 2, 0, 1, 2, 0, 0, 2, 2, 0, 0, 1, 0 ] & 1&0&1&1&2&0&0\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.3}{3.320.3} & [ 0, 1, 1, 0, 1, 2, 2, 0, 1, 2, 2, 1, 0, 1, 2, 1 ]\newline[ 0, 2, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 2, 1, 2 ] & 0&0&1&0&2&0&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.4}{3.320.4} & [ 0, 0, 1, 1, 2, 1, 1, 2, 2, 1, 1, 1, 0, 2, 1, 2 ]\newline[ 1, 0, 1, 1, 2, 0, 0, 2, 2, 2, 1, 1, 0, 2, 1, 0 ]\newline[ 2, 1, 1, 0, 0, 2, 2, 0, 0, 0, 1, 1, 0, 0, 0, 1 ] & 0&0&1&0&1&0&2\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.1}{3.320.1} & [ 1, 2, 2, 1, 0, 2, 2, 0, 0, 0, 1, 1, 0, 0, 0, 2 ]\newline[ 0, 1, 0, 2, 2, 1, 1, 0, 0, 0, 0, 1, 0, 0, 2, 2 ] & 1&1&1&1&2&0&2\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.2}{3.320.2} & [ 0, 2, 0, 0, 2, 0, 0, 1, 0, 0, 0, 2, 0, 0, 2, 0 ]\newline[ 1, 0, 1, 1, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 2, 2 ] & 1&0&1&0&1&0&2\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.5}{3.320.5} & [ 1, 2, 0, 2, 1, 0, 1, 0, 0, 0, 2, 2, 0, 0, 1, 0 ]\newline[ 1, 2, 2, 2, 0, 2, 0, 1, 0, 0, 2, 2, 0, 0, 0, 1 ] & 0&0&1&1&2&0&2\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.6}{3.320.6} & [ 1, 2, 0, 2, 0, 2, 2, 2, 0, 0, 1, 1, 0, 0, 0, 2 ]\newline[ 2, 0, 0, 2, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 2, 2 ] & 0&0&1&0&1&0&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2880.13}{3.2880.13} & [ 2, 1, 2, 0, 0, 1, 1, 2, 0, 2, 0, 2, 0, 0, 0, 2 ]\newline[ 2, 2, 1, 2, 0, 0, 2, 1, 0, 1, 1, 1, 0, 0, 0, 2 ]\newline[ 1, 0, 0, 0, 0, 1, 0, 0, 0, 2, 2, 0, 0, 0, 0, 2 ] & 0&0&2&0&2&0&3\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2880.17}{3.2880.17} & [ 1, 2, 1, 0, 0, 0, 1, 1, 0, 2, 2, 1, 0, 0, 0, 1 ]\newline[ 2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2 ]\newline[ 1, 1, 0, 2, 0, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 2 ] & 0&0&1&0&2&0&3\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.5760.2}{3.5760.2} & [ 0, 2, 2, 2, 2, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1, 0 ]\newline[ 1, 0, 2, 1, 0, 1, 0, 2, 0, 0, 1, 0, 0, 0, 0, 1 ] & 2&1&2&2&3&0&0\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.5760.5}{3.5760.5} & [ 0, 1, 2, 1, 1, 0, 1, 0, 0, 0, 0, 2, 0, 0, 2, 0 ]\newline[ 0, 1, 1, 2, 1, 0, 2, 0, 0, 0, 0, 2, 0, 0, 2, 0 ] & 2&1&2&1&3&0&0\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.12}{3.8640.12} & [ 0, 0, 2, 2, 2, 1, 2, 2, 1, 2, 2, 0, 1, 1, 1, 0 ]\newline[ 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2, 0, 1, 2, 0 ] & 0&0&2&0&2&0&4\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.13}{3.8640.13} & [ 2, 2, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 2, 1, 0, 2 ]\newline[ 2, 1, 0, 1, 2, 2, 2, 0, 2, 2, 1, 2, 1, 2, 1, 1 ] & 0&0&1&0&2&0&4\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2880.13}{3.2880.13} & [ 2, 0, 1, 1, 0, 2, 1, 1, 0, 0, 2, 0, 0, 0, 0, 2 ]\newline[ 1, 0, 0, 2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]\newline[ 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2 ] & 0&0&2&0&2&0&3\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2880.17}{3.2880.17} & [ 2, 0, 0, 1, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2 ]\newline[ 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0 ]\newline[ 1, 0, 2, 1, 0, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 1 ] & 0&0&1&0&2&0&3\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.2}{3.8640.2} & [ 2, 1, 1, 0, 2, 1, 2, 1, 1, 0, 2, 2, 1, 1, 1, 1 ]\newline[ 2, 2, 2, 0, 1, 0, 1, 2, 2, 2, 1, 1, 0, 2, 2, 2 ] & 0&0&2&0&2&0&4\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.4}{3.8640.4} & [ 1, 1, 1, 0, 2, 0, 2, 1, 0, 0, 1, 2, 0, 0, 1, 0 ]\newline[ 1, 2, 1, 1, 2, 0, 2, 1, 2, 2, 0, 1, 0, 2, 1, 2 ] & 0&0&1&0&2&0&4\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.240.6}{3.240.6} & [ 0, 0, 2, 2, 2, 1, 1, 2, 0, 0, 2, 0, 2, 0, 1, 0 ]\newline[ 2, 0, 2, 1, 0, 2, 0, 2, 0, 0, 2, 0, 1, 0, 1, 1 ] & 0&0&1&0&0&1&0\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.240.7}{3.240.7} & [ 2, 0, 0, 2, 1, 2, 0, 1, 0, 0, 2, 0, 2, 0, 2, 1 ]\newline[ 0, 0, 0, 1, 0, 2, 2, 0, 0, 0, 1, 0, 1, 0, 0, 0 ] & 0&0&1&0&0&1&1\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.1}{3.320.1} & [ 1, 0, 1, 2, 2, 2, 1, 0, 2, 0, 0, 1, 0, 1, 2, 0 ]\newline[ 1, 2, 2, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0, 0, 2 ] & 1&1&1&1&2&0&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.2}{3.320.2} & [ 2, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 2, 0, 0, 0, 1 ]\newline[ 1, 1, 2, 0, 2, 1, 1, 1, 2, 2, 0, 1, 0, 1, 2, 1 ] & 1&0&1&0&1&0&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.5}{3.320.5} & [ 1, 2, 1, 1, 2, 1, 1, 1, 2, 0, 2, 1, 0, 2, 1, 2 ]\newline[ 0, 0, 2, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 2, 1, 2 ] & 0&0&1&1&2&0&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.6}{3.320.6} & [ 1, 2, 2, 1, 0, 0, 2, 2, 0, 2, 0, 1, 0, 0, 0, 2 ]\newline[ 2, 1, 2, 0, 1, 0, 1, 1, 1, 2, 2, 1, 0, 2, 1, 2 ] & 0&0&1&0&1&0&2\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.2}{3.8640.2} & [ 1, 1, 1, 0, 1, 2, 1, 1, 1, 1, 2, 2, 0, 1, 2, 0 ]\newline[ 2, 2, 2, 0, 2, 1, 2, 2, 1, 0, 2, 1, 2, 1, 1, 1 ] & 0&0&2&0&2&0&4\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.8640.4}{3.8640.4} & [ 2, 1, 1, 0, 1, 0, 1, 1, 2, 2, 1, 2, 0, 2, 2, 2 ]\newline[ 2, 2, 0, 0, 0, 1, 0, 0, 1, 1, 2, 1, 2, 1, 0, 1 ] & 0&0&1&0&2&0&4\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.5760.2}{3.5760.2} & [ 2, 2, 0, 1, 0, 1, 0, 0, 0, 2, 2, 1, 0, 0, 0, 1 ]\newline[ 1, 1, 2, 0, 0, 1, 0, 2, 0, 0, 1, 2, 0, 0, 0, 1 ] & 2&1&2&2&3&0&0\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.5760.5}{3.5760.5} & [ 1, 2, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1 ]\newline[ 1, 2, 2, 0, 0, 2, 0, 1, 0, 1, 1, 0, 0, 0, 0, 2 ] & 2&1&2&1&3&0&0\\
 \hline
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.3}{3.320.3} & [ 1, 0, 1, 0, 0, 1, 2, 1, 0, 0, 2, 0, 0, 0, 0, 2 ]\newline[ 0, 1, 2, 1, 2, 1, 1, 1, 0, 0, 0, 2, 0, 0, 1, 1 ] & 0&0&1&0&2&0&2\\
-\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.320.4}{3.320.4} & [ 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 2, 0, 0, 1, 1 ]\newline[ 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 2, 0, 0, 2, 0 ]\newline[ 0, 1, 0, 2, 1, 0, 2, 0, 0, 0, 0, 2, 0, 0, 2, 0 ] & 0&0&1&0&1&0&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2160.9}{3.2160.9} & [ 2, 2, 1, 0, 0, 1, 1, 1, 1, 1, 0, 2, 2, 1, 0, 1 ]\newline[ 1, 2, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 2, 1, 0, 2 ] & 0&0&1&0&1&1&2\\
+\href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.2160.10}{3.2160.10} & [ 2, 2, 1, 1, 0, 1, 1, 1, 2, 1, 2, 1, 1, 2, 0, 1 ]\newline[ 2, 1, 2, 1, 0, 0, 2, 2, 1, 0, 1, 0, 2, 1, 0, 1 ] & 0&0&1&0&1&2&2\\
 \hline
 > 
 > ordG := #G; ordG;
@@ -641,26 +378,25 @@ for|for>         lbl := Gassmanndups_GLconjugate_lbls[i][j];
 for|for>         H := X[lbl]`subgroup;
 for|for>         ordH := ordG/X[lbl]`index;
 for|for>         lblwithlink := Sprintf("%o%o}{%o}", s, lbl, lbl);
-for|for>         gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in Generat\
-orsSequence(H)]; gens := gens[1..#gens-8];
+for|for>         gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in GeneratorsSequence(H)]; gens := gens[1..#gens-8];
 for|for>         printf "%o & %o & %o\\\\\n", ordH, lblwithlink, gens;
 for|for>     end for;
 for>     printf "\\hline\n";
 for> end for;
-16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.13}{3.6480.13} & [ 2, 2, 1, 1, 0, 0, 2, 1, 2, 1, 1, 2, 2, 2, 0, 0 ]\newline[ 1, 1, 1, 0, 0, 0, 2, 1, 1, 2, 0, 2, 1, 1, 0, 2 ]\\
-16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.17}{3.6480.17} & [ 2, 0, 2, 1, 1, 1, 0, 0, 2, 2, 2, 0, 0, 0, 2, 1 ]\newline[ 0, 2, 2, 2, 0, 0, 0, 2, 2, 1, 0, 1, 0, 2, 0, 0 ]\\
+16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.3}{3.6480.3} & [ 2, 2, 2, 0, 1, 2, 0, 2, 0, 0, 2, 1, 0, 0, 2, 2 ]\newline[ 0, 1, 1, 0, 2, 0, 0, 1, 2, 0, 0, 2, 0, 2, 1, 0 ]\\
+16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.16}{3.6480.16} & [ 2, 1, 1, 0, 2, 2, 0, 1, 0, 0, 2, 2, 0, 0, 1, 2 ]\newline[ 0, 0, 0, 1, 0, 2, 1, 0, 0, 1, 1, 0, 2, 0, 0, 0 ]\\
 \hline
-16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.14}{3.6480.14} & [ 2, 0, 2, 2, 1, 1, 0, 2, 0, 0, 2, 0, 0, 0, 2, 1 ]\newline[ 2, 1, 1, 0, 0, 1, 2, 1, 1, 0, 2, 2, 1, 1, 0, 1 ]\newline[ 2, 2, 2, 0, 0, 0, 1, 2, 2, 1, 0, 1, 2, 2, 0, 1 ]\\
-16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.15}{3.6480.15} & [ 1, 1, 2, 2, 2, 2, 0, 2, 2, 1, 1, 2, 0, 2, 1, 2 ]\newline[ 2, 0, 1, 1, 1, 1, 0, 1, 1, 2, 2, 0, 0, 1, 2, 1 ]\newline[ 1, 0, 1, 2, 0, 1, 2, 1, 2, 2, 2, 0, 2, 2, 0, 2 ]\\
+16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.14}{3.6480.14} & [ 0, 2, 2, 0, 1, 0, 0, 2, 0, 0, 0, 1, 0, 0, 2, 0 ]\newline[ 2, 2, 0, 1, 1, 2, 2, 0, 1, 2, 1, 1, 1, 1, 2, 1 ]\newline[ 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 0 ]\\
+16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.15}{3.6480.15} & [ 0, 0, 0, 2, 0, 2, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0 ]\newline[ 0, 0, 2, 1, 2, 2, 1, 2, 1, 1, 1, 0, 2, 1, 1, 0 ]\newline[ 2, 1, 0, 1, 2, 2, 2, 0, 2, 2, 1, 2, 1, 2, 1, 1 ]\\
 \hline
-16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.3}{3.6480.3} & [ 2, 2, 2, 0, 0, 0, 1, 2, 2, 1, 0, 1, 2, 2, 0, 1 ]\newline[ 0, 2, 2, 0, 0, 1, 1, 2, 2, 0, 0, 1, 2, 2, 0, 1 ]\\
-16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.16}{3.6480.16} & [ 1, 2, 1, 0, 0, 2, 2, 1, 1, 0, 1, 1, 1, 1, 0, 2 ]\newline[ 1, 1, 1, 0, 0, 0, 2, 1, 1, 0, 1, 2, 1, 1, 0, 0 ]\\
+32 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.3240.6}{3.3240.6} & [ 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 2, 1, 0 ]\newline[ 2, 2, 2, 0, 1, 2, 0, 2, 0, 0, 2, 1, 0, 0, 2, 2 ]\newline[ 2, 1, 2, 2, 0, 0, 2, 2, 1, 1, 0, 2, 2, 1, 0, 1 ]\\
+32 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.3240.7}{3.3240.7} & [ 2, 2, 2, 0, 1, 2, 0, 2, 1, 2, 1, 1, 1, 1, 2, 1 ]\newline[ 1, 1, 0, 2, 1, 2, 2, 0, 0, 0, 1, 2, 0, 0, 2, 2 ]\newline[ 1, 0, 0, 2, 0, 2, 2, 0, 0, 0, 1, 0, 0, 0, 0, 2 ]\\
 \hline
-32 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.3240.6}{3.3240.6} & [ 0, 0, 2, 0, 0, 0, 1, 2, 1, 0, 0, 0, 1, 1, 0, 0 ]\newline[ 0, 0, 1, 1, 0, 0, 2, 1, 1, 2, 0, 0, 1, 1, 0, 0 ]\newline[ 2, 2, 2, 0, 0, 0, 1, 2, 2, 0, 2, 1, 2, 2, 0, 0 ]\\
-32 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.3240.7}{3.3240.7} & [ 0, 2, 2, 0, 0, 1, 1, 2, 2, 0, 0, 1, 2, 2, 0, 1 ]\newline[ 2, 0, 0, 0, 0, 2, 0, 0, 1, 2, 1, 0, 1, 1, 0, 1 ]\newline[ 1, 0, 1, 1, 0, 1, 2, 1, 2, 1, 2, 0, 2, 2, 0, 2 ]\\
+8 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.12960.5}{3.12960.5} & [ 0, 0, 2, 2, 2, 1, 2, 2, 1, 2, 2, 0, 1, 1, 1, 0 ]\newline[ 1, 1, 2, 1, 0, 0, 1, 2, 1, 2, 0, 2, 1, 1, 0, 2 ]\\
+8 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.12960.11}{3.12960.11} & [ 0, 2, 2, 0, 1, 0, 0, 2, 0, 0, 0, 1, 0, 0, 2, 0 ]\newline[ 2, 2, 0, 1, 1, 2, 2, 0, 1, 2, 1, 1, 1, 1, 2, 1 ]\\
 \hline
-8 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.12960.5}{3.12960.5} & [ 2, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1 ]\newline[ 1, 0, 1, 1, 0, 1, 2, 1, 2, 1, 2, 0, 2, 2, 0, 2 ]\\
-8 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.12960.11}{3.12960.11} & [ 2, 1, 1, 0, 0, 1, 2, 1, 1, 0, 2, 2, 1, 1, 0, 1 ]\newline[ 1, 1, 2, 2, 2, 2, 0, 2, 2, 1, 1, 2, 0, 2, 1, 2 ]\\
+16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.13}{3.6480.13} & [ 2, 0, 0, 1, 0, 1, 1, 0, 0, 0, 2, 0, 0, 0, 0, 1 ]\newline[ 2, 1, 1, 0, 2, 2, 0, 1, 2, 2, 1, 2, 1, 2, 1, 1 ]\\
+16 & \href{https://www.lmfdb.org/knowledge/show/gsp4.subgroup_data?label=3.6480.17}{3.6480.17} & [ 2, 1, 2, 2, 0, 0, 1, 1, 2, 2, 0, 1, 2, 1, 0, 1 ]\newline[ 0, 0, 0, 1, 0, 2, 1, 0, 0, 1, 1, 0, 2, 0, 0, 0 ]\\
 \hline
 
-Total time: 17.859 seconds, Total memory usage: 321.81MB
+Total time: 11.609 seconds, Total memory usage: 96.16MB

@@ -11,43 +11,43 @@ Ls := [lbl : lbl in Ls | lbl eq "1.1.1" or exists(cc){cc[3] : cc in ConjugacyCla
 
 // 169.a.169.1
 C := HyperellipticCurveOfGenus(2,[x^5+x^4,x^3+x+1]);
-time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+time imglabel, img := mod3Galoisimage(C : errorbound:=0.0001,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 assert X[imglabel]`subgroup eq img;
 print imglabel;
 
 // Example 2.5
 C := HyperellipticCurve(R![0, 2, 5, -1, -5, 2], R![]);
-time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+time imglabel, img := mod3Galoisimage(C : errorbound:=0.0001,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 assert X[imglabel]`subgroup eq img;
 print imglabel;
 
 // Example 2.6
 C := HyperellipticCurve(-27*x^6 + 54*x^5 - 693*x^4 + 1278*x^3 - 543*x^2 - 60*x - 16);
-time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+time imglabel, img := mod3Galoisimage(C : errorbound:=0.0001,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 assert X[imglabel]`subgroup eq img;
 print imglabel;
 
 // Example 2.11
 C := HyperellipticCurve(R![-6, 11, -19, 14, -9, 1], R![1]);
-time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+time imglabel, img := mod3Galoisimage(C : errorbound:=0.0001,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 assert X[imglabel]`subgroup eq img;
 print imglabel;
 
 // Example 4.1
 C := HyperellipticCurveOfGenus(2,x*(x^4 - 2^3*855*x^2 + 2^4*13^4));
-time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+time imglabel, img := mod3Galoisimage(C : errorbound:=0.0001,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 assert X[imglabel]`subgroup eq img;
 print imglabel;
 
 // Example 4.1
 C := QuadraticTwist(C,2);
-time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+time imglabel, img := mod3Galoisimage(C : errorbound:=0.0001,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 assert X[imglabel]`subgroup eq img;
 print imglabel;
 
 
 // A curve where bruteforce is needed, and the image is 3.3240.6
 C := HyperellipticCurveOfGenus(2,3*x^6 + 198*x^4 - 396*x^2 - 24);
-time imglabel, img := mod3Galoisimage(C : certainty:=0.9999,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
+time imglabel, img := mod3Galoisimage(C : errorbound:=0.0001,primesbounds:=[100,20],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=true);
 assert X[imglabel]`subgroup eq img;
 print imglabel;

@@ -296,13 +296,13 @@ returns false if no such set of integers exists.}
 	end if;
 end intrinsic;
 
-intrinsic distinguish(C :: CrvHyp, Ls :: SeqEnum : X := AssociativeArray(),Verbose:=false) -> MonStgElt, GrpMat
+intrinsic distinguish(C :: CrvHyp, Ls :: SeqEnum, X :: Assoc :Verbose:=false) -> MonStgElt, GrpMat
 {distinguish among the multiple possibilities Ls using global tests based
 on the maximum number of three-torsion points over small degree number fields.}
 	C := SimplifiedModel(C);
 	indexdata := whatindexsubgroupdistinguishes(Ls);
-	if #Keys(X) eq 0 then X := GSpLattice(4,3,0); end if;
-	if Type(indexdata) eq BoolElt then return constructmod3image(C,Ls : X:=X,Verbose:=Verbose); end if;
+//	if #Keys(X) eq 0 then X := GSpLattice(4,3,0); end if;
+	if Type(indexdata) eq BoolElt then return constructmod3image(C,Ls,X:Verbose:=Verbose); end if;
 	Ls := Seqset(Ls);
 	if Verbose then printf "Possibilities = %o\nConsidering subgroups of index %o will distinguish\n", Ls, indexdata; end if;
     if #Ls eq 4 and #indexdata eq 3 then
@@ -379,7 +379,7 @@ end intrinsic;
 
 // ###########################################################################################################
 
-intrinsic degofthreetorsfield(C :: CrvHyp : minusoneinGal := false) -> RngIntElt
+intrinsic degofthreetorsfield(C :: CrvHyp : minusoneinGal := true) -> RngIntElt
 {returns the degree of the three torsion field of Jacobian of C}
 	C := SimplifiedModel(C);
 	ffnew, ggnew, lcmofdens := separablethreedivpoly(C);
@@ -415,12 +415,12 @@ suppressed sextic hyperelliptic polynomial used in computing the three torsion p
 end intrinsic;
 
 
-intrinsic constructmod3image(C :: CrvHyp, Ls :: SeqEnum : X := AssociativeArray(), Verbose := false) -> MonStgElt, GrpMat
+intrinsic constructmod3image(C :: CrvHyp, Ls :: SeqEnum, X :: Assoc : Verbose := false) -> MonStgElt, GrpMat
 {distinguish among the multiple possibilities Ls by globally fixing a basis of Jac(C)[3]
 over the three torsion field, and sampling Frobenius elements up to simultaneous conjugation.}
 	Z3 := Integers(3);
 	G := GSp(4,3);
-	if #Keys(X) eq 0 then X := GSpLattice(4,3,0); end if;
+//	if #Keys(X) eq 0 then X := GSpLattice(4,3,0); end if;
 	Hs := [X[l]`subgroup : l in Ls];
 	ordH := #Hs[1];
     C1 := SimplifiedModel(C);
@@ -670,7 +670,7 @@ cond should be a multiple of the product of all bad primes.}
 end intrinsic;
 */
 
-intrinsic mod3Galoisimage(C :: CrvHyp : certainty:=0.9999,primesbounds:=[100,20],CCs:=[],phi:=map<{1}->{1}|x:->1>,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>,Ls:=[],X:=AssociativeArray(),Verbose:=false) -> MonStgElt, GrpMat
+intrinsic mod3Galoisimage(C :: CrvHyp : errorbound:=0.0001,primesbounds:=[100,20],CCs:=[],phi:=map<{1}->{1}|x:->1>,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>,Ls:=[],X:=AssociativeArray(),Verbose:=false) -> MonStgElt, GrpMat
 {returns the mod-3 Galois image as a matrix group and its label}
 	N := 3;
     if CCs eq [] then CCs, phi := GSpConjugacyClasses(4,N); end if;
@@ -680,14 +680,14 @@ intrinsic mod3Galoisimage(C :: CrvHyp : certainty:=0.9999,primesbounds:=[100,20]
 
 	if #Ls eq 1 then return Ls[1], X[Ls[1]]`subgroup; end if;
 
-    Ls, S, boo := GSpModNImageProbablisticFromFrobSign(C,N,certainty:B:=primesbounds[1],CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=Verbose);
+    Ls, S, boo := GSpModNImageProbablisticFromFrobSign(C,N,errorbound:B:=primesbounds[1],CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=Verbose);
     if Verbose then printf "%o, %o, %o\n%o\n\n", Ls, [<GSpLookupLabel(X,s[1]), s[2]> : s in S], boo, #{[x[2] : x in X[l]`ClassSignDist] : l in Ls}; end if;
 
-    Ls, S, boo := GSpModNImageProbablisticFromFrob(C,N,certainty:B:=primesbounds[2],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=Verbose);
+    Ls, S, boo := GSpModNImageProbablisticFromFrob(C,N,errorbound:B:=primesbounds[2],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=Verbose);
     if Verbose then printf "%o, %o, %o\n%o\n\n", Ls, [<GSpLookupLabel(X,s[1]), s[2]> : s in S], boo, #{[x[2] : x in X[l]`gassmanndist] : l in Ls}; end if;
 
 	if #Ls eq 1 then return Ls[1], X[Ls[1]]`subgroup; end if;
-	return distinguish(C,Ls : X:=X,Verbose:=Verbose);
+	return distinguish(C,Ls,X : Verbose:=Verbose);
 end intrinsic;
 
 
