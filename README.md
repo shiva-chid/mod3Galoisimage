@@ -9,39 +9,47 @@ The file example_RealizeImage.m contains a worked-out example illustrating how t
 
 Main intrinsics:
 Given a genus 2 hyperelliptic curve C/Q
-- `mod3Galoisimage(C)` returns the mod-3 Galois image as a matrix subgroup of GSp(4,Z/3) and its label. Optional parameters:
-`errorbound` is a positive real number close to 0. It sets the probability bound used in the Monte-Carlo method coming from Chebotarev density theorem. Distributions which are unlikely (probability < errorbound) to yield the sampled Frobenius distribution are discarded. Default value is 0.0001.
-`primesbounds` is a sequence of two positive integers B1, B2. Frobenius signature is computed for the first B1 primes of good reduction. The conjugacy class of Frobenius is computed for the first B2 primes of good reduction. Default values are B1 = 100, B2 = 20.
-`CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice. See `examples.m`.
-`Verbose`.
-- `constructmod3image(C, Ls, X)` distinguishes among the Gassmann-equivalent GL-conjugate subgroups with labels Ls, by globally fixing a basis of Jac(C)[3] over the three torsion field, and computing enough Frobenius matrices (all with respect to the globally fixed basis). X is the associative array containing all subgroups of GSp(4,Z/3) as computed by `GSpSubgroupLattice`. Output is the label and the group corresponding to the correct mod-3 Galois image. Optional parameter: `Verbose`.
-- `GSpModNImageProbablisticFromFrobSign(C,N,eps)` - returns the label of H and the subgroup H of GSp(4,Z/N) that is the mod-N image with probability >= 1-eps, followed by a boolean that will be true if H is provably equal to the mod-N image. If a unique subgroup H is not determined, a list of labels of possible subgroups is returned. This works by computing Frobenius signatures for the mod-N representation of Jac(C). Optional parameters:
-`B` specifies the number of primes to consider.
-`prec` specifies the precision used for the probability calculations.
-`CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice.
-`Verbose`.
-- `GSpModNImageProbablisticFromFrob(C,N,eps)` returns two lists giving the labels of H and the subgroups H in a Gassmann-equivalence class of subgroups of GSp(4,Z/NZ), and a third boolean. This class contains the mod-N image H with probability >= 1-eps. The third boolean is true if H is provably equal to the mod-N image. This works by computing Frobenius conjugacy classes for the mod-N representation of Jac(C). Optional parameters:
-`B` specifies the number of primes to consider.
-`prec` specifies the precision used for the probability calculations.
-`CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice.
-`Verbose`.
-- `GSpLattice(d, N, IndexLimit)` computes the lattice of subgroups of GSp(d,Z/N) with surjective similitude character and index bounded by IndexLimit. Returns an associative array containing records with attributes label, level, index, orbits, children, parents, subgroup where children and parents are lists of labels that identify maximal subgroups and minimal supergroups. Optional parameters:
-`IndexDivides` if set to true, only computes the lattice of subgroups whose index exactly divides IndexLimit.
-`excludepgroups` if set to a prime p, only computes the lattice of subgroups that are not p-groups.
-`CCs, phi, ClassSigns, SignPhi` are the precomputed data of conjugacy classes and conjugacy class signatures.
-`Verbose`.
+- `mod3Galoisimage(C)` returns the mod-3 Galois image as a matrix subgroup of GSp(4,Z/3) and its label.
+Optional parameters:
+* `errorbound` is a positive real number close to 0. It sets the probability bound used in the Monte-Carlo method coming from Chebotarev density theorem. Distributions which are unlikely (probability < errorbound) to yield the sampled Frobenius distribution are discarded. Default value is 0.0001.
+* `primesbounds` is a sequence of two positive integers B1, B2. Frobenius signature is computed for the first B1 primes of good reduction. The conjugacy class of Frobenius is computed for the first B2 primes of good reduction. Default values are B1 = 100, B2 = 20.
+* `CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice. See `examples.m`.
+* `Verbose`.
+- `constructmod3image(C, Ls, X)` distinguishes among the Gassmann-equivalent GL-conjugate subgroups with labels Ls, by globally fixing a basis of Jac(C)[3] over the three torsion field, and computing enough Frobenius matrices (all with respect to the globally fixed basis). X is the associative array containing all subgroups of GSp(4,Z/3) as computed by `GSpSubgroupLattice`. Output is the label and the group corresponding to the correct mod-3 Galois image.
+Optional parameter: `Verbose`.
+- `GSpModNImageProbablisticFromFrobSign(C,N,eps)` - returns the label of H and the subgroup H of GSp(4,Z/N) that is the mod-N image with probability >= 1-eps, followed by a boolean that will be true if H is provably equal to the mod-N image. If a unique subgroup H is not determined, a list of labels of possible subgroups is returned. This works by computing Frobenius signatures for the mod-N representation of Jac(C).
+Optional parameters:
+* `B` specifies the number of primes to consider.
+* `prec` specifies the precision used for the probability calculations.
+* `CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice.
+* `Verbose`.
+- `GSpModNImageProbablisticFromFrob(C,N,eps)` returns two lists giving the labels of H and the subgroups H in a Gassmann-equivalence class of subgroups of GSp(4,Z/NZ), and a third boolean. This class contains the mod-N image H with probability >= 1-eps. The third boolean is true if H is provably equal to the mod-N image. This works by computing Frobenius conjugacy classes for the mod-N representation of Jac(C).
+Optional parameters:
+* `B` specifies the number of primes to consider.
+* `prec` specifies the precision used for the probability calculations.
+* `CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice.
+* `Verbose`.
+- `GSpLattice(d, N, IndexLimit)` computes the lattice of subgroups of GSp(d,Z/N) with surjective similitude character and index bounded by IndexLimit. Returns an associative array containing records with attributes label, level, index, orbits, children, parents, subgroup where children and parents are lists of labels that identify maximal subgroups and minimal supergroups.
+Optional parameters:
+* `IndexDivides` if set to true, only computes the lattice of subgroups whose index exactly divides IndexLimit.
+* `excludepgroups` if set to a prime p, only computes the lattice of subgroups that are not p-groups.
+* `CCs, phi, ClassSigns, SignPhi` are the precomputed data of conjugacy classes and conjugacy class signatures.
+* `Verbose`.
 - `GSpConjugacyClasses(d, N)` returns an ordered sequence of tuples <order,length,similitude,representative> giving the conjugacy classes of GSp(d,Z/N), and the classmap.
-- `GSpConjugacyClassSigns(d, N)` returns an ordered sequence of tuples <signature,size> where signature is <[ap,bp,p] mod N,n> where ap, bp are the cubic and quadratic coefficients of the characteristic polynomials of elements of GSp(4,N) and n is the dimension of fixed space, and an index map of these signatures. Optional parameters:
-`CCs, phi` is the data of conjugacy classes and class map.
+- `GSpConjugacyClassSigns(d, N)` returns an ordered sequence of tuples <signature,size> where signature is <[ap,bp,p] mod N,n> where ap, bp are the cubic and quadratic coefficients of the characteristic polynomials of elements of GSp(4,N) and n is the dimension of fixed space, and an index map of these signatures.
+Optional parameters:
+* `CCs, phi` is the data of conjugacy classes and class map.
 
 Other notable intrinsics:
 - `dim_rationalthreetors(C)` computes dimension of Jac(C)(Q)[3] over Z/3
 - `dim_cyclotomicthreetors(C)` computes dimension of Jac(C)(Q_zeta3)[3] over Z/3
-- `dim_threetors_overnfield(C, n, m)` computes the maximum over degree n number fields K of dimension of Jac(C)(K)[3] over Z/3. The third argument m is the expected degree of the three-torsion field. Optional parameters:
-`notnormal` if set to true, will only consider non-normal degree n number fields.
-`minusoneinGal` if set to false, specifies that -I is not in the mod-3 Galois image, i.e., that the projective mod-3 Galois representation is the same as the mod-3 Galois representation.
+- `dim_threetors_overnfield(C, n, m)` computes the maximum over degree n number fields K of dimension of Jac(C)(K)[3] over Z/3. The third argument m is the expected degree of the three-torsion field.
+Optional parameters:
+* `notnormal` if set to true, will only consider non-normal degree n number fields.
+* `minusoneinGal` if set to false, specifies that -I is not in the mod-3 Galois image, i.e., that the projective mod-3 Galois representation is the same as the mod-3 Galois representation.
 - `degofthreetorsfield(C)` returns the degree of the three torsion field of Jac(C). Optional parameter: `minusoneinGal`.
 - `threetorsfield(C, m)` computes the three torsion field of Jac(C), given that it has degree m.
 - `projmod3Galoisimage(C, m)` returns the Magma SmallGroupDatabase id of the projective mod-3 Galois image, given that it has order m.
-- `max_pts_over_ext(H, n)` computes the maximum F_p-dimension of the subspace of F_p^r fixed by an index n subgroup of H, where H is a given subgroup of GL(r,F_p). If H is the mod-p Galois image, then this is exactly the maximum F_p-dimension of Jac(C)(K)[p] over degree n number fields K. Optional parameter:
-`normal` if set to true, only considers normal subgroups of H.
+- `max_pts_over_ext(H, n)` computes the maximum F_p-dimension of the subspace of F_p^r fixed by an index n subgroup of H, where H is a given subgroup of GL(r,F_p). If H is the mod-p Galois image, then this is exactly the maximum F_p-dimension of Jac(C)(K)[p] over degree n number fields K.
+Optional parameter:
+* `normal` if set to true, only considers normal subgroups of H.
