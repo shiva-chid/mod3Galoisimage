@@ -37,7 +37,7 @@ Optional parameters:
   * `Verbose`.
 
 #### Local information about C at a given prime
-- `GSpFrobSignModN(C,N,p)` returns a list consisting of a tuple <ap mod N, bp mod N, p mod N> and an integer n, where ap and bp are the linear and quadratic coefficients of the characteristic polynomial of Frobenius matrix at p for the action on Jac(C)[N], and n is the F_p-dimension of Jac(C)[N](F_p).
+- `GSpFrobSignModN(C,N,p)` returns a list consisting of a tuple <ap mod N, bp mod N, p mod N> and an integer n, where ap and bp are the linear and quadratic coefficients of the characteristic polynomial of Frobenius matrix at p for the action on Jac(C)[N], and n is the F_p-dimension of Jac(C)(F_p)[N].
 - `GSpFrobMatrixModN(C,N,p)` returns a matrix in the GSp(4,Z/3)-conjugacy class of the Frobenius matrix at p for the action on Jac(C)[N].
 Optional parameter:
   * `CCs` is the list of all conjugacy classes.
