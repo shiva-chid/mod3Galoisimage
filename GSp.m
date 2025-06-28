@@ -758,7 +758,7 @@ If the remaining possible images all have same GassmannDistribution, the third b
 end intrinsic;
 
 intrinsic GSpFrobSignModN(C::CrvHyp,N::RngIntElt,p::RngIntElt)->Tup
-{ returns a list consisiting of a tuple <ap mod N, bp mod N, p mod N> and an integer n, where ap and bp are the linear and quadratic coefficients of the characteristic polynomial of Frobenius matrix at p for the action on Jac(C)[N], and n is the F_p-dimension of Jac(C)[N](F_p). }
+{ returns a list consisting of a tuple <ap mod N, bp mod N, p mod N> and an integer n, where ap and bp are the linear and quadratic coefficients of the characteristic polynomial of Frobenius matrix at p for the action on Jac(C)[N], and n is the F_p-dimension of Jac(C)[N](F_p). }
     badprimes := &*BadPrimes(C)*2;
     require N*badprimes mod p ne 0 : "Bad prime"; 
     ZN := Integers(N);

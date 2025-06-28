@@ -1,13 +1,17 @@
 # mod-3 Galois image of abelian surfaces
-Given a genus 2 curve C, the function mod3Galoisimage(C) returns the image of the mod-3 Galois representation coming from the Galois action on the three-torsion points Jac(C)[3] of the Jacobian, as a subgroup H of GSp(4,F_3) upto conjugacy.
+This directory has code associated with the paper [Computing the mod-3 Galois image of a principally polarized abelian surface over the rationals](https://arxiv.org/abs/2502.02044)
 
-Example implementations are in the file example.m
+The main function is called `mod3Galoisimage`. It takes a genus 2 curve over Q as input and returns the image of the mod-3 Galois representation, coming from the Galois action on the three-torsion points Jac(C)[3] of the Jacobian, as a subgroup H of GSp(4,Z/3) upto conjugacy.
 
-It also returns a label for the subgroup H which can be used to access information about H by calling X[label]. X is an associative array listing all subgroups of GSp(4,Z/3) with surjective similitude character, upto conjugacy using unique labels. The label of a subgroup is a string "N.i.a" where N is the level (which will be 3 for all proper subgroups of GSp(4,Z/3)), and i is the index in GSp(4,Z/3). The last entry a is a positive integer which distinguishes the conjugacy classes of subgroups of the same level and index. It is computed deterministically using the subgroup lattice structure, orbit signature for the natural action on F_3^4, conjugacy class signature and if necessary, by lexicographical ordering of canonicalized generators. This labelling is due to Drew Sutherland. The label of a subgroup H can be obtained by calling GSpLookupLabel(X,H);
+If calling this function for multiple curves, it is better to pre-compute data about the subgroup lattice of GSp(4,Z/3). This is done using the intrinsics `GSpConjugacyClasses`, `GSpConjugacyClassSigns` and `GSpLattice`. This data is passed as input to the main function through optional parameters. See the file `examples.m` for how to.
 
-The file example_RealizeImage.m contains a worked-out example illustrating how to do the converse starting from a given small subgroup H of GSp(4,Z/3). One constructs an appropriate Galois representation with image equal to H, and uses the intrinsics ```BurkhardtModel()``` and ```Genus2CurveFromBurkhardtTwistPoint()``` defined in BurkhardtModel.m to construct a genus 2 curve C whose mod-3 Galois image is H.
+## Labelling convention
+Up to conjugacy, the subgroups H of GSp(4,Z/3) with surjective similitude character, are identified using unique labels. The label of a subgroup is a string "N.i.a" where N is the level (which will be 3 for all proper subgroups of GSp(4,Z/3)), and i is the index in GSp(4,Z/3). The last entry a is a positive integer which distinguishes the conjugacy classes of subgroups of the same level and index. It is computed deterministically using the subgroup lattice structure, orbit signature for the natural action on F_3^4, conjugacy class signature and if necessary, by lexicographical ordering of canonicalized generators. This labelling is due to Drew Sutherland. The command `X := GSpLattice(4,3,0)` creates an associative array X listing all such subgroups. The keys of X are the labels, and `X[label]` gives access to the stored information about the corresponding subgroup. The label of a subgroup H can be obtained by calling `GSpLookupLabel(X,H)`.
 
-Main intrinsics:
+## Realization problem
+The file `example_RealizeImage.m` contains a worked-out example illustrating how to produce a genus 2 curve C realizing a given small subgroup H of GSp(4,Z/3) as its mod-3 Galois image. The first step is to construct an appropriate Galois representation with image equal to H. Then we use the intrinsics `BurkhardtModel` and `Genus2CurveFromBurkhardtTwistPoint` to construct a genus 2 curve C with this mod-3 Galois representation.
+
+### List of all main intrinsics:
 Given a genus 2 hyperelliptic curve C/Q
 - `mod3Galoisimage(C)` returns the mod-3 Galois image as a matrix subgroup of GSp(4,Z/3) and its label.
 Optional parameters:
@@ -17,6 +21,8 @@ Optional parameters:
   * `Verbose`.
 - `constructmod3image(C, Ls, X)` distinguishes among the Gassmann-equivalent GL-conjugate subgroups with labels Ls, by globally fixing a basis of Jac(C)[3] over the three torsion field, and computing enough Frobenius matrices (all with respect to the globally fixed basis). X is the associative array containing all subgroups of GSp(4,Z/3) as computed by `GSpSubgroupLattice`. Output is the label and the group corresponding to the correct mod-3 Galois image.
 Optional parameter: `Verbose`.
+
+#### The Monte-Carlo methods using Chebotarev density
 - `GSpModNImageProbablisticFromFrobSign(C,N,eps)` - returns the label of H and the subgroup H of GSp(4,Z/N) that is the mod-N image with probability >= 1-eps, followed by a boolean that will be true if H is provably equal to the mod-N image. If a unique subgroup H is not determined, a list of labels of possible subgroups is returned. This works by computing Frobenius signatures for the mod-N representation of Jac(C).
 Optional parameters:
   * `B` specifies the number of primes to consider.
@@ -29,6 +35,14 @@ Optional parameters:
   * `prec` specifies the precision used for the probability calculations.
   * `CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice.
   * `Verbose`.
+
+#### Local information about C at a given prime
+- `GSpFrobSignModN(C,N,p)` returns a list consisting of a tuple <ap mod N, bp mod N, p mod N> and an integer n, where ap and bp are the linear and quadratic coefficients of the characteristic polynomial of Frobenius matrix at p for the action on Jac(C)[N], and n is the F_p-dimension of Jac(C)[N](F_p).
+- `GSpFrobMatrixModN(C,N,p)` returns a matrix in the GSp(4,Z/3)-conjugacy class of the Frobenius matrix at p for the action on Jac(C)[N].
+Optional parameter:
+  * `CCs` is the list of all conjugacy classes.
+
+#### Precomputing data about the subgroup lattice
 - `GSpLattice(d, N, IndexLimit)` computes the lattice of subgroups of GSp(d,Z/N) with surjective similitude character and index bounded by IndexLimit. Returns an associative array containing records with attributes label, level, index, orbits, children, parents, subgroup where children and parents are lists of labels that identify maximal subgroups and minimal supergroups.
 Optional parameters:
   * `IndexDivides` if set to true, only computes the lattice of subgroups whose index exactly divides IndexLimit.
@@ -40,7 +54,7 @@ Optional parameters:
 Optional parameters:
   * `CCs, phi` is the data of conjugacy classes and class map.
 
-Other notable intrinsics:
+#### Other notable intrinsics:
 - `dim_rationalthreetors(C)` computes dimension of Jac(C)(Q)[3] over Z/3
 - `dim_cyclotomicthreetors(C)` computes dimension of Jac(C)(Q_zeta3)[3] over Z/3
 - `dim_threetors_overnfield(C, n, m)` computes the maximum over degree n number fields K of dimension of Jac(C)(K)[3] over Z/3. The third argument m is the expected degree of the three-torsion field.
