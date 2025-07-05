@@ -254,6 +254,11 @@ end intrinsic;
 
 intrinsic GSpCharpolsDistribution(H::GrpMat:N:=0,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>) -> SeqEnum[Tup], RngIntElt
 { The non-normalized distribution of characteristic polynomials of elements in H, stored as [ap,bp,p] mod N. }
+    R := BaseRing(H); if not IsFinite(R) and #H eq 1 then H := GSp(Degree(H),N); end if;
+    if N eq 0 then N := #BaseRing(H); end if;
+    require #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H";
+    d := Degree(H); ZN := Integers(N);
+    if ClassSigns eq [] then ClassSigns, SignPhi := GSpConjugacyClassSigns(d,N); end if;
     ClassSignsdist, cH := GSpClassSignsDistribution(H:N:=N,ClassSigns:=ClassSigns,SignPhi:=SignPhi);
     Charpols := [];
     for x in ClassSigns do
@@ -684,16 +689,16 @@ intrinsic GSpFrobMatrixModN(C::CrvHyp,N::RngIntElt,p::RngIntElt:CCs:=[])->AlgMat
     charpol := P ! Reverse(Coefficients(EulerFactor(BaseExtend(JacC1, GF(p)))));
     possible_ccs := [x[4] : x in CCs | CharacteristicPolynomial(x[4]) eq ChangeRing(charpol,Integers(N))];
     possible_orders := Sort(Setseq({Order(x) : x in possible_ccs}));
-    printf "p = %o, possible_orders of Frob_p = %o\n", p, possible_orders;
+//    printf "p = %o, possible orders of Frob_p = %o\n", p, possible_orders;
 //    for n in possible_orders do
     n := Maximum(possible_orders);
 	    kpn := GF(p,n);
 	    Jackpn := BaseExtend(JacC1,kpn);
 	    A, incl := Sylow(Jackpn,N);
-        print #quo<A|N*A>;
+//        print #quo<A|N*A>;
 //	    if #quo<A|N*A> ne N^4 then continue; end if;
 	    assert #AbelianInvariants(A) eq 4;
-        print n;
+//        print n;
         Pred<x> := PolynomialRing(kpn);
         ords := [Order(A.i) : i in [1..4]];
         basis := [incl(ExactQuotient(ords[i],N)*A.i) : i in [1..4]];
@@ -732,6 +737,7 @@ If the remaining possible images all have same GassmannDistribution, the third b
 //    print [x[2] : x in X["1.1.1"]`gassmanndist], #Ls_Gassmanndists, {#x : x in Ls_Gassmanndists}, [x[2] : x in Ls_Gassmanndists[#Ls_Gassmanndists]];
 //    assert &and[&+[x[2] : x in X[l]`gassmanndist] eq GSpSize(4,N)/X[l]`index : l in Ls];
     A := [];
+    if #Set(Ls_Gassmanndists) eq 1 then return A, Ls, true; end if;
     if Verbose then printf "Number of possible images remaining:\n"; end if;
     for p in PrimesInInterval(NthPrime(B0),NthPrime(B)) do
 //        print p;
@@ -750,9 +756,9 @@ If the remaining possible images all have same GassmannDistribution, the third b
         remaining_inds := [i : i in [1..#Ls] | Ls_Gassmanndists[i][frobind][2] ne 0];
         Ls := Ls[remaining_inds];
         possibleimages := possibleimages[remaining_inds];
+        if Verbose then printf "%o after Frob_%o. ", #Ls, p; end if;
         Ls_Gassmanndists := Ls_Gassmanndists[remaining_inds];
         if #Set(Ls_Gassmanndists) eq 1 then return A, Ls, true; end if;
-        if Verbose then printf "%o after Frob_%o. ", #Ls, p; end if;
     end for;
     return A, Ls, false;
 end intrinsic;
@@ -782,7 +788,7 @@ intrinsic GSpFrobSignsModN(C::CrvHyp,N::RngIntElt,B::RngIntElt:B0:=3,CCs:=[],phi
 The second return values is a list of labels of the remaining possible images.
 If the remaining possible images all have same ClassSignDistribution, the third boolean return value says to stop computing more Frobenius signs. }
     if CCs eq [] then CCs, phi := GSpConjugacyClasses(4,N); end if;
-    if ClassSigns eq [] then print "Recomputing"; ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N); end if;
+    if ClassSigns eq [] then print "Recomputing class signs\n"; ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N); end if;
     if #Keys(X) eq 0 then X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi); end if;
     if Ls eq [] then Ls := Sort(Setseq(Keys(X))); end if;
     possibleimages := [(l eq "1.1.1") select GSp(4,N) else X[l]`subgroup : l in Ls];
@@ -790,6 +796,7 @@ If the remaining possible images all have same ClassSignDistribution, the third 
 //    print [x[2] : x in X["1.1.1"]`ClassSignDist], #Ls_ClassSignDists, {#x : x in Ls_ClassSignDists}, [x[2] : x in Ls_ClassSignDists[#Ls_ClassSignDists]];
 //    assert &and[&+[x[2] : x in X[l]`ClassSignDist] eq GSpSize(4,N)/X[l]`index : l in Ls];
     A := [];
+    if #Set(Ls_ClassSignDists) eq 1 then return A, Ls, true; end if;
     if Verbose then printf "Number of possible images remaining:\n"; end if;
     for p in PrimesInInterval(NthPrime(B0),NthPrime(B)) do
 //        print p;
@@ -808,9 +815,9 @@ If the remaining possible images all have same ClassSignDistribution, the third 
         remaining_inds := [i : i in [1..#Ls] | Ls_ClassSignDists[i][frobind][2] ne 0];
         Ls := Ls[remaining_inds];
         possibleimages := possibleimages[remaining_inds];
+        if Verbose then printf "%o after Frob_%o. ", #Ls, p; end if;
         Ls_ClassSignDists := Ls_ClassSignDists[remaining_inds];
         if #Set(Ls_ClassSignDists) eq 1 then return A, Ls, true; end if;
-        if Verbose then printf "%o after Frob_%o. ", #Ls, p; end if;
     end for;
     return A, Ls, false;
 end intrinsic;
@@ -823,36 +830,52 @@ If a unique subgroup H is not determined, a list of labels of possible subgroups
     if ClassSigns eq [] then ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N); end if;
     if #Keys(X) eq 0 then X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi); end if;
     if Ls eq [] then Ls := Sort(Setseq(Keys(X))); end if;
-    if Verbose then printf "Computing Frobenius matrices...\n"; end if;
+    if Verbose then printf "Computing Frobenius matrices..."; end if;
     A, Ls, stop := GSpFrobMatricesModN(C,N,B:B0:=3,CCs:=CCs,phi:=phi,Ls:=Ls,X:=X,Verbose:=Verbose); assert #Ls gt 0;
-    if Verbose then printf "Done. %o possible images: %o.\n", #Ls, Ls; end if;
+    if Verbose then printf "\nDone. %o possible images: %o.\n", #Ls, Ls; end if;
     if #Ls eq 1 then return Ls, [], true; end if;
     if Verbose then printf "Bayesian probability update\n"; end if;
     possibleimages := [<(l eq "1.1.1") select GSp(4,N) else X[l]`subgroup,1/#Ls> : l in Ls];
     S := GSpBayesianProbabilityUpdateFrobMat(A,possibleimages:N:=N,CCs:=CCs,phi:=phi,prec:=prec);
     Ls := [GSpLookupLabel(X,s[1]) : s in S];
+    if Verbose then printf "Possible images with probabilities:\n%o\n", [<Ls[i],S[i,2]> : i in [1..#Ls]]; end if;
     if stop then return Ls, S, false; end if;
+/*
+    inds := [i : i in [1..#Ls] | X[Ls[i]]`gassmanndist eq X[Ls[1]]`gassmanndist];
+    if &+[S[i][2] : i in inds] ge 1-eps then return Ls[inds], S[inds], false; end if;
+*/
     if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
     Re := RealField();
     B0 := B+1; size := B div 2;
     B := B+size;
     while B le 3*size do
-        if Verbose then printf "Computing more Frobenius matrices...\n"; end if;
+        if Verbose then printf "Computing more Frobenius matrices..."; end if;
         A, Ls, stop := GSpFrobMatricesModN(C,N,B:B0:=B0,CCs:=CCs,phi:=phi,Ls:=Ls,X:=X,Verbose:=Verbose);
-        if Verbose then printf "Done. %o possible images still remain: %o.\n", #Ls, Ls; end if;
+        if Verbose then printf "\nDone. %o possible images still remain: %o.\n", #Ls, Ls; end if;
         if #Ls eq 1 then return Ls, [], true; end if;
         if Verbose then printf "Bayesian probability update\n"; end if;
         possibleimages := [s : s in S | GSpLookupLabel(X,s[1]) in Ls];
         S := GSpBayesianProbabilityUpdateFrobMat(A,possibleimages:N:=N,CCs:=CCs,phi:=phi,prec:=prec);
         Ls := [GSpLookupLabel(X,s[1]) : s in S];
+        if Verbose then printf "Possible images with probabilities:\n%o\n", [<Ls[i],S[i,2]> : i in [1..#Ls]]; end if;
         if stop then return Ls, S, false; end if;
         if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
         B0 := B+1;
         B := B+size;
-        if Verbose then printf "Based on Frobenius up to the %oth prime, %o possibilities remain for the mod-%o Galois image, with probabilities:\n%o\n", B0-1, #S, N, [Re ! x[2] : x in S]; end if;
+//        if Verbose then printf "Based on Frobenius up to the %oth prime, %o possibilities remain for the mod-%o Galois image, with probabilities:\n%o\n", B0-1, #S, N, [Re ! x[2] : x in S]; end if;
     end while;
     inds := [i : i in [1..#S] | S[i][2] ge eps]; assert #inds ge 1;
-    return Ls[inds], S[inds], false;
+    Ls := Ls[inds]; S := S[inds];
+    Ls_Gassmanndists := [X[l]`gassmanndist : l in Ls];
+    if #Set(Ls_Gassmanndists) eq 1 then
+        return Ls, S, false;
+    else
+        s := Sprintf("Sampled primes not enough to determine the Gassmann-equivalence class of mod-%o image.\n", N);
+        s := s cat Sprintf("Increase the second integer in the optional parameter primebounds: eg., from [100,20] to [100,100], or\n");
+        s := s cat Sprintf("set the optional parameter order to be the degree of the %o-torsion field.\n", N);
+        s := s cat Sprintf("It can be computed from a %o-torsion polynomial. For eg, if N=%o, the command #GaloisGroup(separablethreedivpoly(C) computes the order.\n", N, 3);
+        require #Set(Ls_Gassmanndists) eq 1 : "s\n";
+    end if;
 end intrinsic;
 
 intrinsic GSpModNImageProbablisticFromFrobSign(C::CrvHyp,N::RngIntElt,eps::FldReElt:B:=50,prec:=10,CCs:=[],phi:=map<{1}->{1}|x:->1>,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>,Ls:=[],X:=AssociativeArray(),Verbose:=false) -> SeqEnum, SeqEnum, BoolElt
@@ -863,34 +886,40 @@ If a unique subgroup H is not determined, a list of labels of possible subgroups
     if ClassSigns eq [] then ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N); end if;
     if #Keys(X) eq 0 then X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi); end if;
     if Ls eq [] then Ls := Sort(Setseq(Keys(X))); end if;
-    if Verbose then printf "Computing Frobenius signs...\n"; end if;
+    if Verbose then printf "Computing Frobenius signs..."; end if;
     A, Ls, stop := GSpFrobSignsModN(C,N,B:B0:=3,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,Ls:=Ls,X:=X,Verbose:=Verbose); assert #Ls gt 0;
-    if Verbose then printf "Done. %o possible images: %o.\n", #Ls, Ls; end if;
+    if Verbose then printf "\nDone. %o possible images: %o.\n", #Ls, Ls; end if;
     if #Ls eq 1 then return Ls, [], true; end if;
     if Verbose then printf "Bayesian probability update\n"; end if;
     possibleimages := [<(l eq "1.1.1") select GSp(4,N) else X[l]`subgroup,1/#Ls> : l in Ls];
     S := GSpBayesianProbabilityUpdateFrobSign(A,possibleimages:N:=N,ClassSigns:=ClassSigns,SignPhi:=SignPhi,prec:=prec);
     Ls := [GSpLookupLabel(X,s[1]) : s in S];
+    if Verbose then printf "Possible images with probabilities:\n%o\n", [<Ls[i],S[i,2]> : i in [1..#Ls]]; end if;
     if stop then return Ls, S, false; end if;
+/*
+    inds := [i : i in [1..#Ls] | X[Ls[i]]`ClassSignDist eq X[Ls[1]]`ClassSignDist];
+    if &+[S[i][2] : i in inds] ge 1-eps then return Ls[inds], S[inds], false; end if;
+*/
     if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
     Re := RealField();
     B0 := B+1; size := B div 2;
     B := B+size;
     while B le 4*size do
-        if Verbose then printf "Computing more Frobenius signs...\n"; end if;
+        if Verbose then printf "Computing more Frobenius signs..."; end if;
         A, Ls, stop := GSpFrobSignsModN(C,N,B:B0:=B0,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,Ls:=Ls,X:=X,Verbose:=Verbose);
-        if Verbose then printf "Done. %o possible images still remain: %o.\n", #Ls, Ls; end if;
+        if Verbose then printf "\nDone. %o possible images still remain: %o.\n", #Ls, Ls; end if;
         if #Ls eq 1 then return Ls, [], true; end if;
         if Verbose then printf "Bayesian probability update\n"; end if;
         possibleimages := [s : s in S | GSpLookupLabel(X,s[1]) in Ls];
         S := GSpBayesianProbabilityUpdateFrobSign(A,possibleimages:N:=N,ClassSigns:=ClassSigns,SignPhi:=SignPhi,prec:=prec);
         Ls := [GSpLookupLabel(X,s[1]) : s in S];
+        if Verbose then printf "Possible images with probabilities:\n%o\n", [<Ls[i],S[i,2]> : i in [1..#Ls]]; end if;
         if stop then return Ls, S, false; end if;
 //        print #S, #Ls, [s[2] : s in S];
         if S[1,2] ge 1-eps then return Ls[[1]], S[[1]], false; end if;
         B0 := B+1;
         B := B+size;
-        if Verbose then printf "Based on Frobenius signs up to the %oth prime, %o possibilities remain for the mod-%o Galois image, with probabilities:\n%o\n", B0-1, #S, N, [Re ! x[2] : x in S]; end if;
+//        if Verbose then printf "Based on Frobenius signs up to the %oth prime, %o possibilities remain for the mod-%o Galois image, with probabilities:\n%o\n", B0-1, #S, N, [Re ! x[2] : x in S]; end if;
     end while;
     inds := [i : i in [1..#S] | S[i][2] ge eps]; assert #inds ge 1;
     return Ls[inds], S[inds], false;

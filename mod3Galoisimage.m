@@ -296,37 +296,47 @@ returns false if no such set of integers exists.}
 	end if;
 end intrinsic;
 
-intrinsic distinguish(C :: CrvHyp, Ls :: SeqEnum, X :: Assoc :Verbose:=false) -> MonStgElt, GrpMat
+intrinsic distinguish(C :: CrvHyp, Ls :: SeqEnum, X :: Assoc : Verbose:=false) -> MonStgElt, GrpMat
 {distinguish among the multiple possibilities Ls using global tests based
 on the maximum number of three-torsion points over small degree number fields.}
 	C := SimplifiedModel(C);
 	indexdata := whatindexsubgroupdistinguishes(Ls);
 //	if #Keys(X) eq 0 then X := GSpLattice(4,3,0); end if;
 	if Type(indexdata) eq BoolElt then return constructmod3image(C,Ls,X:Verbose:=Verbose); end if;
-	Ls := Seqset(Ls);
-	if Verbose then printf "Possibilities = %o\nConsidering subgroups of index %o will distinguish\n", Ls, indexdata; end if;
-    if #Ls eq 4 and #indexdata eq 3 then
-		Ls1 := ["3.320.1","3.320.2","3.320.5","3.320.6"]; assert Seqset(Ls1) eq Ls;
+	Lsset := Seqset(Ls);
+	if Verbose then printf "Possibilities = %o\nComputing fixed space under subgroups of index %o will distinguish\n", Ls, indexdata; end if;
+    if #Lsset eq 4 and #indexdata eq 3 then
+		Ls1 := ["3.320.1","3.320.2","3.320.5","3.320.6"]; assert Seqset(Ls1) eq Lsset;
 		Hs := [X[l]`subgroup : l in Ls1];
 		ordH := #Hs[1];
 		assert max_pts_over_ext(Hs[1],1) eq 1;
 		SG := Symp(4,3);
 		assert Dimension(FixMod(GModule(Hs[2]),SG meet Hs[2])) eq 1;
 		assert max_pts_over_ext(Hs[3],3) eq 1;
-		if dim_rationalthreetors(C) eq 1 then
-			if Verbose then printf "Computed dimension of rational three torsion.\n"; end if;
+		if Verbose then printf "Computing dimension of rational three torsion..."; end if;
+		dimtors := dim_rationalthreetors(C);
+		if Verbose then printf "It is %o.\n", dimtors; end if;
+		if dimtors eq 1 then
 			return Ls1[1], Hs[1];
-		elif dim_cyclotomicthreetors(C) eq 1 then
-			if Verbose then printf "Computed dimension of three torsion over Q(zeta_3).\n"; end if;
-			return Ls1[2], Hs[2];
-		elif dim_threetors_overnfield(C,3,ordH : minusoneinGal := false) eq 1 then
-			if Verbose then printf "Computed maximum dimension of three torsion over a cubic field.\n"; end if;
-			return Ls1[3], Hs[3];
 		else
-			return Ls1[4], Hs[4];
+			if Verbose then printf "Computing dimension of three torsion over Q(zeta_3)..."; end if;
+			dimcyctors := dim_cyclotomicthreetors(C);
+			if Verbose then printf "It is %o.\n", dimcyctors; end if;
+			if dimcyctors eq 1 then
+				return Ls1[2], Hs[2];
+			else
+				if Verbose then printf "Computing maximum dimension of three torsion over degree %o fields...", 3; end if;
+				dimtors3field := dim_threetors_overnfield(C,3,ordH : minusoneinGal := false);
+				if Verbose then printf "It is %o.\n", dimtors3field; end if;
+				if dimtors3field eq 1 then
+					return Ls1[3], Hs[3];
+				else
+					return Ls1[4], Hs[4];
+				end if;
+			end if;
 		end if;
-    elif #Ls eq 4 and #indexdata eq 2 then
-		Ls1 := ["3.640.1","3.640.2","3.640.3","3.640.4"]; assert Seqset(Ls1) eq Ls;
+    elif #Lsset eq 4 and #indexdata eq 2 then
+		Ls1 := ["3.640.1","3.640.2","3.640.3","3.640.4"]; assert Seqset(Ls1) eq Lsset;
 		Hs := [X[l]`subgroup : l in Ls1];
 		ordH := #Hs[1];
 		assert max_pts_over_ext(Hs[1],1) eq 1;
@@ -335,10 +345,12 @@ on the maximum number of three-torsion points over small degree number fields.}
 		assert max_pts_over_ext(Hs[2],3) eq 1;
 		assert max_pts_over_ext(Hs[3],3) eq 0;
 		assert max_pts_over_ext(Hs[4],3) eq 1;
-		if Verbose then printf "Computing dimension of rational three torsion...\n"; end if;
+		if Verbose then printf "Computing dimension of rational three torsion..."; end if;
 		dimtors := dim_rationalthreetors(C);
-		if Verbose then printf "Computing projective mod-3 Galois image...\n"; end if;
+		if Verbose then printf "It is %o.\n", dimtors; end if;
+		if Verbose then printf "Computing projective mod-3 Galois image..."; end if;
 		idGal := projmod3Galoisimage(C,162);
+		if Verbose then printf "It is the group with SmallGroup id %o.\n", idGal; end if;
 		if dimtors eq 1 and idGal eq <162,11> then
 			return Ls1[1], Hs[1];
 		elif dimtors eq 1 and idGal eq <162,19> then
@@ -350,24 +362,27 @@ on the maximum number of three-torsion points over small degree number fields.}
 			return Ls1[4], Hs[4];
 		end if;
 	elif indexdata ne {1} then
-		assert #Ls eq 2;
+		assert #Lsset eq 2;
 		n := Random(indexdata);
-		Ls1 := Setseq(Ls);
+		Ls1 := Ls;
 		Hs := [X[l]`subgroup : l in Ls1];
 		ordH := #Hs[1];
-		if Verbose then printf "Computing maximum dimension of three torsion over a degree %o field...\n", n; end if;
+		if Verbose then printf "Computing maximum dimension of three torsion over degree %o fields...", n; end if;
 		dimtorsnfield := dim_threetors_overnfield(C,n,ordH);
+		if Verbose then printf "It is %o.\n", dimtorsnfield; end if;
 		if dimtorsnfield eq max_pts_over_ext(Hs[1],n) then
 			return Ls1[1], Hs[1];
 		else
+			assert dimtorsnfield eq max_pts_over_ext(Hs[2],n);
 			return Ls1[2], Hs[2];
 		end if;
 	else
-		Ls1 := Setseq(Ls);
+		Ls1 := Ls;
 		Hs := [X[l]`subgroup : l in Ls1];
 		ordH := #Hs[1];
-		if Verbose then printf "Computing dimension of rational three torsion...\n"; end if;
+		if Verbose then printf "Computing dimension of rational three torsion..."; end if;
 		dimtors := dim_rationalthreetors(C);
+		if Verbose then printf "It is %o.\n", dimtors; end if;
 		for i := 1 to #Ls1 do
 			if max_pts_over_ext(Hs[i],1) eq dimtors then
 				return Ls1[i], Hs[i];
@@ -670,21 +685,37 @@ cond should be a multiple of the product of all bad primes.}
 end intrinsic;
 */
 
-intrinsic mod3Galoisimage(C :: CrvHyp : errorbound:=0.0001,primesbounds:=[100,20],CCs:=[],phi:=map<{1}->{1}|x:->1>,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>,Ls:=[],X:=AssociativeArray(),Verbose:=false) -> MonStgElt, GrpMat
+intrinsic mod3Galoisimage(C :: CrvHyp : errorbound:=0.0001,primesbounds:=[100,20],order:=0,AbstractGalGrp:=Sym(1),CCs:=[],phi:=map<{1}->{1}|x:->1>,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>,Ls:=[],X:=AssociativeArray(),Verbose:=false) -> MonStgElt, GrpMat
 {returns the mod-3 Galois image as a matrix group and its label}
 	N := 3;
+	GSpord := GSpSize(4,N);
     if CCs eq [] then CCs, phi := GSpConjugacyClasses(4,N); end if;
     if ClassSigns eq [] then ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N); end if;
     if #Keys(X) eq 0 then X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi); end if;
-    if Ls eq [] then Ls := Sort(Setseq(Keys(X))); end if;
+    if Ls eq [] then
+		Ls := Setseq(Keys(X));
+		Ls := Sort(Ls,func<x,y|(xs[1] ne ys[1]) select xs[1]-ys[1] else (xs[2] ne ys[2]) select xs[2]-ys[2] else xs[3]-ys[3] where xs is [StringToInteger(a) : a in Split(x,".")] where ys is [StringToInteger(a) : a in Split(y,".")]>);
+		Ls := [lbl : lbl in Ls | lbl eq "1.1.1" or exists(cc){cc[3] : cc in ConjugacyClasses(H) | cc[1] eq 2 and GSpSimilitudeCharacter(cc[3]) eq -1} where H is X[lbl]`subgroup];
+	end if;
+	if order ne 0 then
+		Ls := [lbl : lbl in Ls | order*X[lbl]`index eq GSpord];
+		if Verbose then printf "Initial possibilities: %o\n", Ls; end if;
+	end if;
+	if #AbstractGalGrp ne 1 then
+		Ls1 := [lbl : lbl in Ls | IsIsomorphic(X[lbl]`subgroup,AbstractGalGrp)];
+		Ls := Setseq(&join[{lbl : lbl in Ls | X[lbl]`gassmanndist eq X[lbl1]`gassmanndist} : lbl1 in Ls1]);
+		Ls := Sort(Ls,func<x,y|(xs[1] ne ys[1]) select xs[1]-ys[1] else (xs[2] ne ys[2]) select xs[2]-ys[2] else xs[3]-ys[3] where xs is [StringToInteger(a) : a in Split(x,".")] where ys is [StringToInteger(a) : a in Split(y,".")]>);
+		Ls := [lbl : lbl in Ls | lbl eq "1.1.1" or exists(cc){cc[3] : cc in ConjugacyClasses(H) | cc[1] eq 2 and GSpSimilitudeCharacter(cc[3]) eq -1} where H is X[lbl]`subgroup];
+		if Verbose then printf "Initial possibilities: %o\n", Ls; end if;
+	end if;
 
 	if #Ls eq 1 then return Ls[1], X[Ls[1]]`subgroup; end if;
 
-    Ls, S, boo := GSpModNImageProbablisticFromFrobSign(C,N,errorbound:B:=primesbounds[1],CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=Verbose);
-    if Verbose then printf "%o, %o, %o\n%o\n\n", Ls, [<GSpLookupLabel(X,s[1]), s[2]> : s in S], boo, #{[x[2] : x in X[l]`ClassSignDist] : l in Ls}; end if;
+    Ls, S, boo := GSpModNImageProbablisticFromFrobSign(C,N,errorbound:B:=primesbounds[1],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=Verbose);
+//    if Verbose then printf "%o, %o, %o\n%o\n\n", Ls, [<GSpLookupLabel(X,s[1]), s[2]> : s in S], boo, #{[x[2] : x in X[l]`ClassSignDist] : l in Ls}; end if;
 
     Ls, S, boo := GSpModNImageProbablisticFromFrob(C,N,errorbound:B:=primesbounds[2],Ls:=Ls,CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi,X:=X,Verbose:=Verbose);
-    if Verbose then printf "%o, %o, %o\n%o\n\n", Ls, [<GSpLookupLabel(X,s[1]), s[2]> : s in S], boo, #{[x[2] : x in X[l]`gassmanndist] : l in Ls}; end if;
+//    if Verbose then printf "%o, %o, %o\n%o\n\n", Ls, [<GSpLookupLabel(X,s[1]), s[2]> : s in S], boo, #{[x[2] : x in X[l]`gassmanndist] : l in Ls}; end if;
 
 	if #Ls eq 1 then return Ls[1], X[Ls[1]]`subgroup; end if;
 	return distinguish(C,Ls,X : Verbose:=Verbose);
