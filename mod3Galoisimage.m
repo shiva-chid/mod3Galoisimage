@@ -433,6 +433,7 @@ end intrinsic;
 intrinsic constructmod3image(C :: CrvHyp, Ls :: SeqEnum, X :: Assoc : Verbose := false) -> MonStgElt, GrpMat
 {distinguish among the multiple possibilities Ls by globally fixing a basis of Jac(C)[3]
 over the three torsion field, and sampling Frobenius elements up to simultaneous conjugation.}
+	if Verbose then printf "Doing explicit arithmetic over the 3-torsion field.\n"; end if;
 	Z3 := Integers(3);
 	G := GSp(4,3);
 //	if #Keys(X) eq 0 then X := GSpLattice(4,3,0); end if;
