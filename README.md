@@ -1,7 +1,7 @@
 # mod-3 Galois image of abelian surfaces
 This directory has code associated with the paper [Computing the mod-3 Galois image of a principally polarized abelian surface over the rationals](https://arxiv.org/abs/2502.02044)
 
-The main function is called `mod3Galoisimage`. It takes a genus 2 curve over Q as input and returns the image of the mod-3 Galois representation, coming from the Galois action on the three-torsion points Jac(C)[3] of the Jacobian, as a subgroup H of GSp(4,Z/3) upto conjugacy.
+The main function is called `mod3Galoisimage`. It takes a genus 2 curve over Q as input and returns the image of the mod-3 Galois representation, coming from the Galois action on the 3-torsion points Jac(C)[3] of the Jacobian, as a subgroup H of GSp(4,Z/3) upto conjugacy.
 
 If calling this function for multiple curves, it is better to pre-compute data about the subgroup lattice of GSp(4,Z/3). This is done using the intrinsics `GSpConjugacyClasses`, `GSpConjugacyClassSigns` and `GSpLattice`. This data is passed as input to the main function through optional parameters. See the file `examples.m` for how to.
 
@@ -17,9 +17,11 @@ Given a genus 2 hyperelliptic curve C/Q
 Optional parameters:
   * `errorbound` is a positive real number close to 0. It sets the probability bound used in the Monte-Carlo method coming from Chebotarev density theorem. Distributions which are unlikely (probability < errorbound) to yield the sampled Frobenius distribution are discarded. Default value is 0.0001.
   * `primesbounds` is a sequence of two positive integers B1, B2. Frobenius signature is computed for the first B1 primes of good reduction. The conjugacy class of Frobenius is computed for the first B2 primes of good reduction. Default values are B1 = 100, B2 = 20.
+  * `order` is the order of the mod-3 image. It is also the degree of the 3-torsion field.
+  * `AbstractGalGrp` is a group abstractly isomorphic to the mod-3 image. Such a group can be computed from a 3-torsion polynomial.
   * `CCs, phi, ClassSigns, SignPhi, Ls, X` are the precomputed data of conjugacy classes, conjugacy class signatures, labels of eligible subgroups and the subgroup lattice. See `examples.m`.
   * `Verbose`.
-- `constructmod3image(C, Ls, X)` distinguishes among the Gassmann-equivalent GL-conjugate subgroups with labels Ls, by globally fixing a basis of Jac(C)[3] over the three torsion field, and computing enough Frobenius matrices (all with respect to the globally fixed basis). X is the associative array containing all subgroups of GSp(4,Z/3) as computed by `GSpSubgroupLattice`. Output is the label and the group corresponding to the correct mod-3 Galois image.
+- `constructmod3image(C, Ls, X)` distinguishes among the Gassmann-equivalent GL-conjugate subgroups with labels Ls, by globally fixing a basis of Jac(C)[3] over the 3-torsion field, and computing enough Frobenius matrices (all with respect to the globally fixed basis). X is the associative array containing all subgroups of GSp(4,Z/3) as computed by `GSpSubgroupLattice`. Output is the label and the group corresponding to the correct mod-3 Galois image.
 Optional parameter: `Verbose`.
 
 #### The Monte-Carlo methods using Chebotarev density
@@ -57,12 +59,13 @@ Optional parameters:
 #### Other notable intrinsics:
 - `dim_rationalthreetors(C)` computes dimension of Jac(C)(Q)[3] over Z/3
 - `dim_cyclotomicthreetors(C)` computes dimension of Jac(C)(Q_zeta3)[3] over Z/3
-- `dim_threetors_overnfield(C, n, m)` computes the maximum over degree n number fields K of dimension of Jac(C)(K)[3] over Z/3. The third argument m is the expected degree of the three-torsion field.
+- `dim_threetors_overnfield(C, n, m)` computes the maximum over degree n number fields K of dimension of Jac(C)(K)[3] over Z/3. The third argument m is the expected degree of the 3-torsion field.
 Optional parameters:
   * `notnormal` if set to true, will only consider non-normal degree n number fields.
   * `minusoneinGal` if set to false, specifies that -I is not in the mod-3 Galois image, i.e., that the projective mod-3 Galois representation is the same as the mod-3 Galois representation.
-- `degofthreetorsfield(C)` returns the degree of the three torsion field of Jac(C). Optional parameter: `minusoneinGal`.
-- `threetorsfield(C, m)` computes the three torsion field of Jac(C), given that it has degree m.
+- `separablethreetorspoly(C)` returns a separable 3-torsion polynomial of Jac(C). Its splitting field is the 3-torsion field. Its Galois group is abstractly isomorphic to the mod-3 Galois image.
+- `degofthreetorsfield(C)` returns the degree of the 3-torsion field of Jac(C). Optional parameter: `minusoneinGal`.
+- `threetorsfield(C, m)` computes the 3-torsion field of Jac(C), given that it has degree m.
 - `projmod3Galoisimage(C, m)` returns the Magma SmallGroupDatabase id of the projective mod-3 Galois image, given that it has order m.
 - `max_pts_over_ext(H, n)` computes the maximum F_p-dimension of the subspace of F_p^r fixed by an index n subgroup of H, where H is a given subgroup of GL(r,F_p). If H is the mod-p Galois image, then this is exactly the maximum F_p-dimension of Jac(C)(K)[p] over degree n number fields K.
 Optional parameter:

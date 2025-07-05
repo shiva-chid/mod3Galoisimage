@@ -105,7 +105,7 @@ intrinsic dim_threetors_overnfield(C :: CrvHyp, n :: RngIntElt, expectedorderofG
     P3 := ProjectiveSpace(Rationals(),3);
     X := Scheme(P3,temppols2);
 
-	ffnew, ggnew, _ := separablethreedivpoly(C);
+	ffnew, ggnew, _ := separablethreetorspoly(C);
 
     Fac := Factorisation(ffnew);
     Facproj := Factorisation(ggnew);
@@ -169,7 +169,7 @@ intrinsic projmod3Galoisimage(C :: CrvHyp, projimageorder :: RngIntElt) -> Tup
 	C := SimplifiedModel(C);
 	f := HyperellipticPolynomials(C);
 	P<x> := Parent(f);
-	ffnew, ggnew, _ := separablethreedivpoly(C);
+	ffnew, ggnew, _ := separablethreetorspoly(C);
 
     Facproj := Factorisation(ggnew);
     Ga := GaloisGroup(Facproj[#Facproj][1] : Type := "Complex");
@@ -397,7 +397,7 @@ end intrinsic;
 intrinsic degofthreetorsfield(C :: CrvHyp : minusoneinGal := true) -> RngIntElt
 {returns the degree of the three torsion field of Jacobian of C}
 	C := SimplifiedModel(C);
-	ffnew, ggnew, lcmofdens := separablethreedivpoly(C);
+	ffnew, ggnew, lcmofdens := separablethreetorspoly(C);
 	if minusoneinGal then
 		G := GaloisGroup(ggnew); ans := 2*#G;
 	else
@@ -410,7 +410,7 @@ intrinsic threetorsfield(C :: CrvHyp, n :: RngIntElt) -> FldNum, RngIntElt
 {compute the three torsion field of Jac(C) and the lcm of all denominators in the
 suppressed sextic hyperelliptic polynomial used in computing the three torsion polynomial}
 	C := SimplifiedModel(C);
-	ffnew, ggnew, lcmofdens := separablethreedivpoly(C);
+	ffnew, ggnew, lcmofdens := separablethreetorspoly(C);
 
     Fac := Factorisation(ffnew);
 	K := SplittingField(Fac[#Fac][1]);

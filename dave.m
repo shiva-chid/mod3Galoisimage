@@ -1,5 +1,5 @@
 intrinsic torspoly_part1(F :: Any, atoe :: SeqEnum) -> RngMPolElt
-{returns a chunk of the 3-division polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e}
+{returns a chunk of the 3-torsion polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e}
     P<x> := PolynomialRing(F);
     a := atoe[1];
     b := atoe[2];
@@ -25437,7 +25437,7 @@ intrinsic torspoly_part1(F :: Any, atoe :: SeqEnum) -> RngMPolElt
 end intrinsic;
 
 intrinsic torspoly_part2(F :: Any, atoe :: SeqEnum) -> RngMPolElt
-{returns a chunk of the 3-division polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e}
+{returns a chunk of the 3-torsion polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e}
     P<x> := PolynomialRing(F);
     a := atoe[1];
     b := atoe[2];
@@ -48542,11 +48542,11 @@ intrinsic torspoly_part2(F :: Any, atoe :: SeqEnum) -> RngMPolElt
 end intrinsic;
 
 intrinsic threetorspoly(F :: Any, atoe :: SeqEnum) -> RngMPolElt
-{returns a degree 80 3-division polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e. F is the base field.}
+{returns a degree 80 3-torsion polynomial corresponding to the curve y^2 = x^6 + a x^4 + b x^3 + ... + e. F is the base field.}
     return torspoly_part1(F,atoe) + torspoly_part2(F,atoe);
 end intrinsic;
 
-intrinsic separablethreedivpoly(C :: CrvHyp) -> RngUPolElt, RngUPolElt, RngIntElt
+intrinsic separablethreetorspoly(C :: CrvHyp) -> RngUPolElt, RngUPolElt, RngIntElt
 {returns two separable polynomials of deg 80 and 40 corresponding to the three-torsion field
 and the projective three-torsion field for the Jacobian of the given curve.
 The lcm of all denominators in the suppressed sextic hyperelliptic polynomial
