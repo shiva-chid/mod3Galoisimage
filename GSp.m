@@ -870,11 +870,12 @@ If a unique subgroup H is not determined, a list of labels of possible subgroups
     if #Set(Ls_Gassmanndists) eq 1 then
         return Ls, S, false;
     else
-        s := Sprintf("Sampled primes not enough to determine the Gassmann-equivalence class of mod-%o image.\n", N);
-        s := s cat Sprintf("Increase the second integer in the optional parameter primebounds: eg., from [100,20] to [100,100], or\n");
-        s := s cat Sprintf("set the optional parameter order to be the degree of the %o-torsion field.\n", N);
-        s := s cat Sprintf("It can be computed from a %o-torsion polynomial. For eg, if N=%o, the command #GaloisGroup(separablethreedivpoly(C) computes the order.\n", N, 3);
-        require #Set(Ls_Gassmanndists) eq 1 : "s\n";
+        s := Sprintf("\nSampled primes not enough to determine the Gassmann-equivalence class of mod-%o image. Options to consider:\n", N);
+        s := s cat Sprintf("1) Increase the second integer in the optional parameter \"primesbounds\": eg., from [100,20] to [100,100].\n");
+        s := s cat Sprintf("2) Set the optional parameter \"order\" to be the degree of the %o-torsion field.\n", N);
+        s := s cat Sprintf("3) Set the optional parameter \"AbstractGalGrp\" to be a group abstractly isomorphic to the mod-%o image.\n", N);
+        s := s cat Sprintf("Note 2) and 3) can be computed from a %o-torsion polynomial.\nFor N=%o, \"GaloisGroup(separablethreedivpoly(C))\" yields a permutation group abstractly isomorphic to the mod-%o image.\n", N, 3, 3);
+        require #Set(Ls_Gassmanndists) eq 1 : s cat "\n";
     end if;
 end intrinsic;
 
