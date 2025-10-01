@@ -252,6 +252,23 @@ intrinsic GSpConjugacyClassSigns(d::RngIntElt, N::RngIntElt:CCs:=[],phi:=map<{1}
 //    return [<ClassSigns[i],counts[i]> : i in [1..#ClassSigns]], map<Seqset(ClassSigns)->{1..#ClassSigns}|x:->Index(ClassSigns,x)>;
 end intrinsic;
 
+intrinsic GSpConjugacyClassFullSigns(d::RngIntElt, N::RngIntElt:CCs:=[],phi:=map<{1}->{1}|x:->1>) -> SeqEnum[Tup], Map
+{ An ordered sequence of tuples <sign,size> where sign is <[ap,bp,p] mod N, set of <alpha_i,n_i>> where ap, bp are the cubic and quadratic coefficients of the characteristic polynomials of elements of GSp(4,Z/N) and alpha_i are the eigenvalues and n_i is the dimension of the alpha_i-eigenspace, and an index map of these signs. }
+    if N eq 1 then return [<1,1>]; end if;
+    require IsPrimePower(N) : "Currently only prime power level is supported.";
+    ZN := Integers(N);
+    if CCs eq [] then CCs, phi := GSpConjugacyClasses(d,N); end if;
+    ClassFullSigns := [];
+//    counts := [];
+    for x in CCs do
+        pol := CharacteristicPolynomial(x[4]);
+        dims_data := {<alpha[1],Dimension(Kernel(x[4]-alpha[1]*IdentityMatrix(ZN,d)))> : alpha in Eigenvalues(x[4])};
+        sign := <[Coefficient(pol,3),Coefficient(pol,2),x[3]],dims_data>;
+        if not sign in ClassFullSigns then Append(~ClassFullSigns,sign); end if;
+    end for;
+    return ClassFullSigns, map<Seqset(ClassFullSigns)->{1..#ClassFullSigns}|x:->Index(ClassFullSigns,x)>;
+end intrinsic;
+
 intrinsic GSpCharpolsDistribution(H::GrpMat:N:=0,ClassSigns:=[],SignPhi:=map<{1}->{1}|x:->1>) -> SeqEnum[Tup], RngIntElt
 { The non-normalized distribution of characteristic polynomials of elements in H, stored as [ap,bp,p] mod N. }
     R := BaseRing(H); if not IsFinite(R) and #H eq 1 then H := GSp(Degree(H),N); end if;
@@ -299,6 +316,30 @@ intrinsic GSpClassSignsDistribution(H::GrpMat:N:=0,ClassSigns:=[],SignPhi:=map<{
         ClassSignsdist[ii] := <ClassSignsdist[ii][1],oldorder+c[2]>;
     end for;
     return ClassSignsdist, cH;
+end intrinsic;
+
+intrinsic GSpClassFullSignsDistribution(H::GrpMat:N:=0,ClassFullSigns:=[],FullSignPhi:=map<{1}->{1}|x:->1>) -> SeqEnum[Tup], RngIntElt
+{ The non-normalized distribution of conjugacy class fullsigns <[ap,bp,p] mod N, set of <alpha_i,n_i>> of elements in H. }
+    R := BaseRing(H); if not IsFinite(R) and #H eq 1 then H := GSp(Degree(H),N); end if;
+    if N eq 0 then N := #BaseRing(H); end if;
+    require #BaseRing(H) eq N: "N must be equal to the cardinality of the base ring of H";
+    d := Degree(H); ZN := Integers(N);
+    if ClassFullSigns eq [] then ClassFullSigns, FullSignPhi := GSpConjugacyClassFullSigns(d,N); end if;
+    cH := #H;
+    C := ConjugacyClasses(H);
+    ClassFullSignsdist := [<x,0> : x in ClassFullSigns];
+    for c in C do
+        pol := CharacteristicPolynomial(c[3]);
+        sim := GSpSimilitudeCharacter(c[3]);
+        dims_data := {<alpha[1],Dimension(Kernel(c[3]-alpha[1]*IdentityMatrix(ZN,d)))> : alpha in Eigenvalues(c[3])};
+        fullsign := <[Coefficient(pol,3),Coefficient(pol,2),sim],dims_data>;
+        ii := FullSignPhi(fullsign);
+//        print ii, ClassFullSigns[ii], fullsign;
+        assert &and[ClassFullSigns[ii][j] eq fullsign[j] : j in [1,2]];
+        oldorder := ClassFullSignsdist[ii][2];
+        ClassFullSignsdist[ii] := <ClassFullSignsdist[ii][1],oldorder+c[2]>;
+    end for;
+    return ClassFullSignsdist, cH;
 end intrinsic;
 
 /*

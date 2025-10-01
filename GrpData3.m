@@ -7,6 +7,7 @@ SetLogFile(filename);
 AttachSpec("spec");
 CCs, phi := GSpConjugacyClasses(4,N);
 ClassSigns, SignPhi := GSpConjugacyClassSigns(4,N);
+ClassFullSigns, FullSignPhi := GSpConjugacyClassFullSigns(4,N);
 X := GSpLattice(4,N,0:CCs:=CCs,phi:=phi,ClassSigns:=ClassSigns,SignPhi:=SignPhi);
 assert #X eq 330;
 G := GSp(4,3);
@@ -17,7 +18,21 @@ Xsubs := [lbl eq "1.1.1" select GSp(4,3) else X[lbl]`subgroup : lbl in L];
 assert #Xsubs eq 280;
 
 // how many subgroups have same distribution of characteristic polynomials?
-dat1 := [[x[2]/totalord : x in ords] where ords,totalord is GSpCharpolsDistribution(H : ClassSigns:=ClassSigns,SignPhi:=SignPhi) : H in Xsubs];
+dat0 := [[x[2]/totalord : x in ords] where ords,totalord is GSpCharpolsDistribution(H : ClassSigns:=ClassSigns,SignPhi:=SignPhi) : H in Xsubs];
+sdat0 := SequenceToSet(dat0); #sdat0;
+msdat0 := SequenceToMultiset(dat0);
+dat0_dups := [<x,n> : x in sdat0 | n gt 1 where n is Multiplicity(msdat0,x)];
+{* x[2] : x in dat0_dups *};
+
+// how many subgroups have same distribution of Class Signs?
+dat1 := [[x[2]/totalord : x in ords] where ords,totalord is GSpClassSignsDistribution(H : ClassSigns:=ClassSigns,SignPhi:=SignPhi) : H in Xsubs];
+sdat1 := SequenceToSet(dat1); #sdat1;
+msdat1 := SequenceToMultiset(dat1);
+dat1_dups := [<x,n> : x in sdat1 | n gt 1 where n is Multiplicity(msdat1,x)];
+{* x[2] : x in dat1_dups *};
+
+// how many subgroups have same distribution of Class FullSigns?
+dat1 := [[x[2]/totalord : x in ords] where ords,totalord is GSpClassFullSignsDistribution(H : ClassFullSigns:=ClassFullSigns,FullSignPhi:=FullSignPhi) : H in Xsubs];
 sdat1 := SequenceToSet(dat1); #sdat1;
 msdat1 := SequenceToMultiset(dat1);
 dat1_dups := [<x,n> : x in sdat1 | n gt 1 where n is Multiplicity(msdat1,x)];
@@ -133,7 +148,7 @@ for i in inds do
     for j in [1..#Gassmanndups_lbls1[i]] do
         lbl := Gassmanndups_lbls1[i][j];
         lblwithlink := Sprintf("%o%o}{%o}", s, lbl, lbl);
-        gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in GeneratorsSequence(X[lbl]`subgroup)]; gens := gens[1..#gens-8];
+        gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in GeneratorsSequence(GLMinimizeGenerators(X[lbl]`subgroup))]; gens := gens[1..#gens-8];
         dims := &cat[IntegerToString(n) cat "&" : n in maxptsoverextns[i][j]]; dims := dims[1..#dims-1];
         printf "%o & %o & %o\\\\\n", lblwithlink, gens, dims;
     end for;
@@ -144,7 +159,7 @@ ordG := #G; ordG;
 for i := 1 to #Gassmanndups_GLconjugate_lbls do
     for j := 1 to #Gassmanndups_GLconjugate_lbls[i] do
         lbl := Gassmanndups_GLconjugate_lbls[i][j];
-        H := X[lbl]`subgroup;
+        H := GLMinimizeGenerators(X[lbl]`subgroup);
         ordH := ordG/X[lbl]`index;
         lblwithlink := Sprintf("%o%o}{%o}", s, lbl, lbl);
         gens := &cat[Sprint(Eltseq(g)) cat "\\newline" : g in GeneratorsSequence(H)]; gens := gens[1..#gens-8];

@@ -438,11 +438,13 @@ over the three torsion field, and sampling Frobenius elements up to simultaneous
 	G := GSp(4,3);
 //	if #Keys(X) eq 0 then X := GSpLattice(4,3,0); end if;
 	Hs := [X[l]`subgroup : l in Ls];
+	assert #{#H : H in Hs} eq 1;
 	ordH := #Hs[1];
     C1 := SimplifiedModel(C);
     badprimes := &*BadPrimes(C1)*2;
     P<x> := PolynomialRing(Rationals());
     K, lcmofdens := threetorsfield(C,ordH);
+	K := Polredabs(K);
     Jac := Jacobian(C1);
     JacK := BaseExtend(Jac,K);
     KumK := KummerSurface(JacK);
@@ -503,21 +505,40 @@ over the three torsion field, and sampling Frobenius elements up to simultaneous
 			p := NextPrime(p);
 			continue;
 		end if;
+/*
 		k := SplittingField(ChangeRing(defK,GF(p)));
 		Roos := Roots(defK,k);
 		alp := Roos[1][1];
+*/
+		pl := PrimeIdealsOverPrime(K,p)[1];
+		k, red := ResidueClassField(pl);
 		Jack := BaseExtend(JacK,k);
-		all_pts_k := [];
 		Pred<x> := PolynomialRing(k);
-		for i := 1 to #all_pts do
-			pt1 := Coefficients(all_pts[i][1]);
-			pt2 := Coefficients(all_pts[i][2]);
-			pt3 := all_pts[i][3];
-			pt1red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)]] : coe in pt1];
-			pt2red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)] ] : coe in pt2];
-			reducedpt := elt<Jack | [pt1red,pt2red]>;
-			Append(~all_pts_k,reducedpt);
-		end for;
+		all_pts_k := [];
+//		try
+			for i := 1 to #all_pts do
+				pt := all_pts[i];
+/*				pt1 := Coefficients(pt[1]);
+				pt2 := Coefficients(pt[2]);
+				pt3 := pt[3];
+				pt1red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)]] : coe in pt1];
+				pt2red := Pred ! [&+[coe[j]*alp^(j-1) : j in [1..Degree(K)]] : coe in pt2];
+				reducedpt := elt<Jack | [pt1red,pt2red]>;
+*/
+				reducedpt := ReducePointNF(pt,Jack,pl,red);
+				Append(~all_pts_k,reducedpt);
+			end for;
+/*
+		catch e;
+			print pt1, pt2, pt3;
+			print pt1red, pt2red;
+			print pt;
+			print C;
+			print p, e;
+			assert false;
+			p := NextPrime(p);
+		end try;
+*/
 
 		for i := 1 to #all_pts_k do
 			P1 := all_pts_k[i];
@@ -541,6 +562,7 @@ over the three torsion field, and sampling Frobenius elements up to simultaneous
 		end for;
 
 		if basisfound then
+			printf "Symplectic basis found.\n";
 			basismodp := [P1, P2, P3, P4];
 			basisindices := [Index(all_pts_k,basismodp[i]) : i in [1..#basismodp]];
 			basis := [all_pts[basisindices[i]] : i in [1..#basisindices]];
@@ -570,12 +592,14 @@ and deducing the mod 3 Galois image. */
 			sigmaPi := elt<Jack | sigmai1, sigmai2, sigmai3>;
 			Append(~sigmabasis,sigmaPi);
 		end for;
+//		sigmabasis := [Frobenius(pt,k) : pt in basisk];
 
 		sigmabasiscoords := [coords[Index(all_pts_k,sigmabasis[i])] : i in [1..#sigmabasis]];
 		frobpmat := G ! Matrix(Z3,4,4,sigmabasiscoords);
 		if not frobpmat in torsimage then
 			torsimage := sub<G | torsimage, frobpmat>;
 		end if;
+		if Verbose then printf "After considering Frob matrix upto %o, the image contains %o.\n", p, IdentifyGroup(torsimage); end if;
 		boo := exists(l){l : l in Ls | IsConjugate(G,X[l]`subgroup,torsimage)};
 		if boo then return l, X[l]`subgroup; end if;
 
@@ -583,19 +607,27 @@ and deducing the mod 3 Galois image. */
 		while dens mod p eq 0 do
 			p := NextPrime(p);
 		end while;
+/*
 		k := SplittingField(ChangeRing(defK,GF(p)));
 		Roos := Roots(defK,k);
 		alp := Roos[1][1];
-		Pred<x> := PolynomialRing(k);
+*/
+		pl := PrimeIdealsOverPrime(K,p)[1];
+		k, red := ResidueClassField(pl);
 		Jack := BaseExtend(JacK,k);
+		Pred<x> := PolynomialRing(k);
 		basismodp := [];
 		for i := 1 to #basis do
-			pt1 := Coefficients(basis[i][1]);
-			pt2 := Coefficients(basis[i][2]);
-			pt3 := basis[i][3];
+			pt := basis[i];
+/*
+			pt1 := Coefficients(pt[1]);
+			pt2 := Coefficients(pt[2]);
+			pt3 := pt[3];
 			pt1red := Pred ! [&+[k ! (coe[j])*alp^(j-1) : j in [1..Degree(K)]] : coe in pt1];
 			pt2red := Pred ! [&+[k ! (coe[j])*alp^(j-1) : j in [1..Degree(K)] ] : coe in pt2];
 			reducedpt := elt<Jack | [pt1red,pt2red]>;
+*/
+			reducedpt := ReducePointNF(pt,Jack,pl,red);
 			Append(~basismodp,reducedpt);
 		end for;
     end while;
